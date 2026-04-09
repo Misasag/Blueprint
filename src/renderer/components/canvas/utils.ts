@@ -56,6 +56,8 @@ export function px(value: string | undefined): string | undefined {
   return /^\d+$/.test(value) ? `${value}px` : value;
 }
 
+export type Renderer = (p: RenderProps) => React.ReactElement;
+
 export interface RenderProps {
   node: UINode;
   commonProps: {
