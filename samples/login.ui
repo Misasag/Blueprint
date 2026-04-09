@@ -1,0 +1,9 @@
+<Screen name="login">
+  <VStack gap="16" padding="24">
+    <Text size="24" weight="bold">ログイン</Text>
+    <Input placeholder="メールアドレス" width="100%" />
+    <Input placeholder="パスワード" type="password" width="100%" />
+    <Button label="ログイン" color="#3B82F6" radius="8" width="100%" navigate="home" />
+    <Link label="パスワードを忘れた方" navigate="reset" />
+  </VStack>
+</Screen>
