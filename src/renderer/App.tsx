@@ -112,7 +112,11 @@ const EditorApp: React.FC = () => {
         canRedo={canRedo}
       />
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        <ComponentPanel />
+        <ComponentPanel
+          nodes={state.nodes}
+          selectedNodeId={state.selectedNodeId}
+          onSelectNode={selectNode}
+        />
         <Canvas
           nodes={state.nodes}
           selectedNodeId={state.selectedNodeId}
@@ -122,10 +126,8 @@ const EditorApp: React.FC = () => {
         />
         <PropertyPanel
           selectedNode={selectedNode}
-          nodes={state.nodes}
           onUpdateProp={updateNodeProps}
           onUpdateText={updateNodeText}
-          onSelectNode={selectNode}
           onDeleteNode={deleteNode}
         />
       </div>

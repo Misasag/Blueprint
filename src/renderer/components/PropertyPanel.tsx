@@ -1,24 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { UINode, COMMON_PROPS, TAG_PROPS, TEXT_TAGS } from '../../parser';
-import { TreeView } from './TreeView';
 import { PropInput } from './PropInput';
 
 interface PropertyPanelProps {
   selectedNode: UINode | null;
-  nodes: UINode[];
   onUpdateProp: (nodeId: string, propName: string, value: string) => void;
   onUpdateText: (nodeId: string, text: string) => void;
-  onSelectNode: (nodeId: string | null) => void;
   onDeleteNode: (nodeId: string) => void;
 }
 
-type TabType = 'properties' | 'tree';
-
 export const PropertyPanel: React.FC<PropertyPanelProps> = ({
-  selectedNode, nodes, onUpdateProp, onUpdateText, onSelectNode, onDeleteNode,
+  selectedNode, onUpdateProp, onUpdateText, onDeleteNode,
 }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('properties');
-
   return (
     <div style={{
       width: 'var(--panel-width)',
@@ -28,51 +21,31 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({
       flexDirection: 'column',
       overflow: 'hidden',
     }}>
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)' }}>
-        <TabButton active={activeTab === 'properties'} onClick={() => setActiveTab('properties')}>
-          Properties
-        </TabButton>
-        <TabButton active={activeTab === 'tree'} onClick={() => setActiveTab('tree')}>
-          Tree
-        </TabButton>
+      <div style={{
+        padding: '6px 0', borderBottom: '1px solid var(--border-color)',
+        fontSize: '12px', fontWeight: 500, textAlign: 'center',
+        color: 'var(--text-secondary)',
+      }}>
+        Properties
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-        {activeTab === 'properties' ? (
-          selectedNode ? (
-            <PropertiesView
-              node={selectedNode}
-              onUpdateProp={onUpdateProp}
-              onUpdateText={onUpdateText}
-              onDelete={() => onDeleteNode(selectedNode.id)}
-            />
-          ) : (
-            <div style={{ color: 'var(--text-secondary)', fontSize: '12px', padding: '16px', textAlign: 'center' }}>
-              要素を選択してプロパティを編集
-            </div>
-          )
+        {selectedNode ? (
+          <PropertiesView
+            node={selectedNode}
+            onUpdateProp={onUpdateProp}
+            onUpdateText={onUpdateText}
+            onDelete={() => onDeleteNode(selectedNode.id)}
+          />
         ) : (
-          <TreeView nodes={nodes} selectedNodeId={selectedNode?.id ?? null} onSelectNode={onSelectNode} />
+          <div style={{ color: 'var(--text-secondary)', fontSize: '12px', padding: '16px', textAlign: 'center' }}>
+            要素を選択してプロパティを編集
+          </div>
         )}
       </div>
     </div>
   );
 };
-
-const TabButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
-  <button
-    onClick={onClick}
-    style={{
-      flex: 1, padding: '6px 0', border: 'none',
-      borderBottom: active ? '2px solid var(--accent)' : '2px solid transparent',
-      background: 'transparent',
-      color: active ? 'var(--accent)' : 'var(--text-secondary)',
-      fontSize: '12px', fontWeight: 500, cursor: 'pointer',
-    }}
-  >
-    {children}
-  </button>
-);
 
 const PropSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <div style={{ marginBottom: '12px' }}>
