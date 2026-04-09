@@ -55,13 +55,43 @@ const EditorApp: React.FC = () => {
     markSaved,
   });
 
+  // メニューバーからのアクション受信
+  useEffect(() => {
+    if (!window.electronAPI?.onMenuAction) return;
+    return window.electronAPI.onMenuAction((action) => {
+      switch (action) {
+        case 'menu:open': handleOpen(); break;
+        case 'menu:save': handleSave(); break;
+        case 'menu:saveAs':
+          if (window.electronAPI) {
+            window.electronAPI.saveFileAs(state.source).then(result => {
+              if (result?.success && result.filePath) markSaved(result.filePath);
+            });
+          }
+          break;
+        case 'menu:undo': undo(); break;
+        case 'menu:redo': redo(); break;
+        case 'menu:delete': if (state.selectedNodeId) deleteNode(state.selectedNodeId); break;
+      }
+    });
+  }, [handleOpen, handleSave, undo, redo, deleteNode, state.source, state.selectedNodeId, markSaved]);
+
   // キーボードショートカット
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const isMod = e.ctrlKey || e.metaKey;
       const key = e.key.toLowerCase();
 
-      if (isMod && key === 's') {
+      if (isMod && key === 's' && e.shiftKey) {
+        e.preventDefault();
+        if (window.electronAPI) {
+          window.electronAPI.saveFileAs(state.source).then(result => {
+            if (result?.success && result.filePath) markSaved(result.filePath);
+          });
+        }
+        return;
+      }
+      if (isMod && key === 's' && !e.shiftKey) {
         e.preventDefault();
         handleSave();
         return;
@@ -123,6 +153,8 @@ const EditorApp: React.FC = () => {
           onSelectNode={selectNode}
           onAddNode={addNode}
           onMoveNode={moveNode}
+          onUpdateProp={updateNodeProps}
+          onDeleteNode={deleteNode}
         />
         <PropertyPanel
           selectedNode={selectedNode}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { UINode } from '../../../parser';
+import { UINode, STRUCTURAL_PROPS } from '../../../parser';
 
 /** parseInt のNaN安全ラッパー */
 export function safeInt(value: string | undefined, fallback: number): number {
@@ -36,6 +36,11 @@ export function buildStyle(node: UINode): React.CSSProperties {
     const h = normalizeCSSLength(p.height);
     if (h) s.height = h;
   }
+  if (p.minWidth) { const v = normalizeCSSLength(p.minWidth); if (v) s.minWidth = v; }
+  if (p.maxWidth) { const v = normalizeCSSLength(p.maxWidth); if (v) s.maxWidth = v; }
+  if (p.minHeight) { const v = normalizeCSSLength(p.minHeight); if (v) s.minHeight = v; }
+  if (p.maxHeight) { const v = normalizeCSSLength(p.maxHeight); if (v) s.maxHeight = v; }
+  if (p.padding) s.padding = /^\d+$/.test(p.padding) ? `${p.padding}px` : p.padding;
   if (p.margin) s.margin = /^\d+$/.test(p.margin) ? `${p.margin}px` : p.margin;
   if (p.color) s.color = p.color;
   if (p.background) s.background = p.background;
@@ -43,8 +48,30 @@ export function buildStyle(node: UINode): React.CSSProperties {
     const val = parseFloat(p.opacity);
     if (!isNaN(val)) s.opacity = Math.max(0, Math.min(1, val));
   }
+  if (p.radius) s.borderRadius = /^\d+$/.test(p.radius) ? `${p.radius}px` : p.radius;
   if (p.border) s.border = p.border;
   if (p.shadow) s.boxShadow = p.shadow;
+  if (p.overflow) s.overflow = p.overflow as React.CSSProperties['overflow'];
+  if (p.zIndex) { const z = parseInt(p.zIndex, 10); if (!isNaN(z)) s.zIndex = z; }
+  if (p.grow) { const g = parseFloat(p.grow); if (!isNaN(g)) s.flexGrow = g; }
+  if (p.alignSelf) s.alignSelf = p.alignSelf;
+
+  // ホワイトリスト外のプロパティもCSSとして適用（カスタムスタイル対応）
+  const handled = new Set([
+    'width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight',
+    'padding', 'margin', 'color', 'background', 'opacity',
+    'radius', 'border', 'shadow', 'overflow', 'zIndex', 'grow', 'alignSelf',
+  ]);
+  for (const [key, val] of Object.entries(p)) {
+    if (handled.has(key) || !val) continue;
+    // 構造プロパティ（TAG_PROPS由来）はCSSではないので除外
+    if (STRUCTURAL_PROPS.has(key)) continue;
+    // camelCase のプロパティ名で、CSSプロパティとして妥当なものを適用
+    if (/^[a-z][a-zA-Z]*$/.test(key)) {
+      // 純粋な数値ならpxを付与（length系プロパティ対応）
+      (s as Record<string, string>)[key] = /^\d+(\.\d+)?$/.test(val) ? `${val}px` : val;
+    }
+  }
 
   return s;
 }

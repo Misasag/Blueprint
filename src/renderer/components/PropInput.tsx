@@ -24,6 +24,8 @@ const SLIDER_CONFIG: Record<string, { min: number; max: number; step: number }> 
   value: { min: 0, max: 100, step: 1 },
   step: { min: 1, max: 50, step: 1 },
   length: { min: 3, max: 8, step: 1 },
+  zIndex: { min: 0, max: 100, step: 1 },
+  grow: { min: 0, max: 5, step: 1 },
 };
 
 /** 値が純粋な数値かどうかを判定 */

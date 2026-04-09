@@ -9,6 +9,7 @@ export interface ElectronAPI {
   openFile: () => Promise<FileResult | null>;
   saveFile: (filePath: string, content: string) => Promise<FileResult>;
   saveFileAs: (content: string) => Promise<FileResult | null>;
+  onMenuAction: (callback: (action: string) => void) => () => void;
 }
 
 declare global {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { UINode, COMMON_PROPS, TAG_PROPS, TEXT_TAGS } from '../../parser';
+import { UINode, COMMON_PROPS, TAG_PROPS, TEXT_TAGS, getStyleSectionsForTag } from '../../parser';
 import { PropInput } from './PropInput';
 
 interface PropertyPanelProps {
@@ -63,10 +63,12 @@ const PropertiesView = React.memo<{
   onDelete: () => void;
 }>(function PropertiesView({ node, onUpdateProp, onUpdateText, onDelete }) {
   const tagSpecificProps = TAG_PROPS[node.tag] ?? [];
+  const styleSections = getStyleSectionsForTag(node.tag);
   const hasTextContent = node.textContent !== undefined || TEXT_TAGS.includes(node.tag as any);
 
+  const shownStyleProps = new Set(styleSections.flatMap(s => s.props as unknown as string[]));
   const otherProps = Object.keys(node.props).filter(
-    p => !tagSpecificProps.includes(p) && !(COMMON_PROPS as readonly string[]).includes(p)
+    p => !tagSpecificProps.includes(p) && !shownStyleProps.has(p)
   );
 
   return (
@@ -109,16 +111,18 @@ const PropertiesView = React.memo<{
         </PropSection>
       )}
 
-      <PropSection title="STYLE">
-        {[...COMMON_PROPS].map(prop => (
-          <PropInput
-            key={prop} label={prop}
-            value={node.props[prop] ?? ''}
-            onChange={v => onUpdateProp(node.id, prop, v)}
-            isColor={prop === 'color' || prop === 'background'}
-          />
-        ))}
-      </PropSection>
+      {styleSections.map(({ name, props }) => (
+        <PropSection key={name} title={name}>
+          {(props as unknown as string[]).map(prop => (
+            <PropInput
+              key={prop} label={prop}
+              value={node.props[prop] ?? ''}
+              onChange={v => onUpdateProp(node.id, prop, v)}
+              isColor={prop === 'color' || prop === 'background'}
+            />
+          ))}
+        </PropSection>
+      ))}
 
       {otherProps.length > 0 && (
         <PropSection title="OTHER">

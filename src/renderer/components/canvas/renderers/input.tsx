@@ -2,48 +2,92 @@ import React from 'react';
 import { Renderer, px, safeInt } from '../utils';
 
 export const inputRenderers: Record<string, Renderer> = {
-  Button: ({ node, commonProps }) => (
-    <button {...commonProps} style={{
-      ...commonProps.style,
-      padding: px(node.props.padding) ?? '8px 16px',
-      backgroundColor: node.props.color ?? '#0078d4', color: '#ffffff',
-      border: 'none', borderRadius: px(node.props.radius) ?? '4px',
-      fontSize: '14px', fontWeight: 500, width: node.props.width ?? undefined,
-    }}>
-      {node.textContent ?? node.props.label ?? 'Button'}
-    </button>
-  ),
-
-  Input: ({ node, commonProps }) => (
-    <input {...commonProps} readOnly type={node.props.type ?? 'text'} placeholder={node.props.placeholder ?? ''}
-      style={{
+  Button: ({ node, commonProps }) => {
+    const sizeStyle = node.props.size === 'small' ? { padding: '4px 10px', fontSize: '12px' }
+      : node.props.size === 'large' ? { padding: '12px 24px', fontSize: '16px' }
+      : { padding: px(node.props.padding) ?? '8px 16px', fontSize: '14px' };
+    const isOutlined = node.props.variant === 'outlined';
+    return (
+      <button {...commonProps} style={{
         ...commonProps.style,
-        padding: '8px 12px', border: '1px solid var(--border-color)',
-        borderRadius: px(node.props.radius) ?? '4px', fontSize: '14px',
-        width: node.props.width ?? undefined, background: 'var(--bg-primary)',
-      }}
-    />
-  ),
+        ...sizeStyle,
+        backgroundColor: isOutlined ? 'transparent' : (node.props.color ?? '#0078d4'),
+        color: isOutlined ? (node.props.color ?? '#0078d4') : '#ffffff',
+        border: isOutlined ? `1px solid ${node.props.color ?? '#0078d4'}` : 'none',
+        borderRadius: px(node.props.radius) ?? '4px',
+        fontWeight: 500, width: node.props.width ?? undefined,
+        opacity: node.props.loading === 'true' ? 0.7 : undefined,
+        display: 'inline-flex', alignItems: 'center', gap: '6px',
+      }}>
+        {node.props.icon && node.props.iconPosition !== 'right' && <span>{node.props.icon}</span>}
+        {node.props.loading === 'true' ? '...' : (node.textContent ?? node.props.label ?? 'Button')}
+        {node.props.icon && node.props.iconPosition === 'right' && <span>{node.props.icon}</span>}
+      </button>
+    );
+  },
 
-  Textarea: ({ node, commonProps }) => (
-    <textarea {...commonProps} readOnly placeholder={node.props.placeholder ?? ''} rows={safeInt(node.props.rows, 3)}
-      style={{
-        ...commonProps.style,
-        padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '4px',
-        fontSize: '14px', width: node.props.width ?? '100%', resize: 'none',
-      }}
-    />
-  ),
+  Input: ({ node, commonProps }) => {
+    const hasError = !!node.props.error;
+    return (
+      <div {...commonProps} style={{ ...commonProps.style, width: node.props.width ?? undefined }}>
+        {node.props.label && (
+          <div style={{ fontSize: '12px', marginBottom: '4px', color: 'var(--text-secondary)' }}>
+            {node.props.label}
+            {node.props.required === 'true' && <span style={{ color: '#d32f2f', marginLeft: '2px' }}>*</span>}
+          </div>
+        )}
+        <div style={{ display: 'flex', alignItems: 'center', border: `1px solid ${hasError ? '#d32f2f' : 'var(--border-color)'}`, borderRadius: px(node.props.radius) ?? '4px', background: 'var(--bg-primary)', overflow: 'hidden' }}>
+          {node.props.prefix && <span style={{ padding: '8px', color: 'var(--text-secondary)', fontSize: '13px', background: 'var(--bg-secondary)', borderRight: '1px solid var(--border-color)' }}>{node.props.prefix}</span>}
+          <input readOnly type={node.props.type ?? 'text'} placeholder={node.props.placeholder ?? ''}
+            style={{ flex: 1, padding: '8px 12px', border: 'none', fontSize: '14px', background: 'transparent', outline: 'none', fontFamily: 'inherit' }}
+          />
+          {node.props.suffix && <span style={{ padding: '8px', color: 'var(--text-secondary)', fontSize: '13px', background: 'var(--bg-secondary)', borderLeft: '1px solid var(--border-color)' }}>{node.props.suffix}</span>}
+        </div>
+        {node.props.error && <div style={{ fontSize: '11px', color: '#d32f2f', marginTop: '2px' }}>{node.props.error}</div>}
+        {node.props.helperText && !node.props.error && <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>{node.props.helperText}</div>}
+      </div>
+    );
+  },
 
-  Select: ({ node, commonProps }) => (
-    <select {...commonProps} style={{
-      ...commonProps.style,
-      padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '4px',
-      fontSize: '14px', width: node.props.width ?? undefined, background: 'var(--bg-primary)',
-    }}>
-      <option>{node.props.placeholder ?? '選択してください'}</option>
-    </select>
-  ),
+  Textarea: ({ node, commonProps }) => {
+    const hasError = !!node.props.error;
+    return (
+      <div {...commonProps} style={{ ...commonProps.style, width: node.props.width ?? '100%' }}>
+        {node.props.label && (
+          <div style={{ fontSize: '12px', marginBottom: '4px', color: 'var(--text-secondary)' }}>{node.props.label}</div>
+        )}
+        <textarea readOnly placeholder={node.props.placeholder ?? ''} rows={safeInt(node.props.rows, 3)}
+          style={{
+            width: '100%', padding: '8px 12px',
+            border: `1px solid ${hasError ? '#d32f2f' : 'var(--border-color)'}`,
+            borderRadius: '4px', fontSize: '14px', resize: 'none', fontFamily: 'inherit',
+          }}
+        />
+        {node.props.error && <div style={{ fontSize: '11px', color: '#d32f2f', marginTop: '2px' }}>{node.props.error}</div>}
+      </div>
+    );
+  },
+
+  Select: ({ node, commonProps }) => {
+    const hasError = !!node.props.error;
+    return (
+      <div {...commonProps} style={{ ...commonProps.style, width: node.props.width ?? undefined }}>
+        {node.props.label && (
+          <div style={{ fontSize: '12px', marginBottom: '4px', color: 'var(--text-secondary)' }}>{node.props.label}</div>
+        )}
+        <select style={{
+          width: '100%', padding: '8px 12px',
+          border: `1px solid ${hasError ? '#d32f2f' : 'var(--border-color)'}`,
+          borderRadius: '4px', fontSize: '14px', background: 'var(--bg-primary)', fontFamily: 'inherit',
+        }}>
+          <option>{node.props.placeholder ?? '選択してください'}</option>
+          {node.props.options?.split(',').map((opt, i) => <option key={i}>{opt.trim()}</option>)}
+        </select>
+        {node.props.multiple === 'true' && <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '2px' }}>複数選択可</div>}
+        {node.props.error && <div style={{ fontSize: '11px', color: '#d32f2f', marginTop: '2px' }}>{node.props.error}</div>}
+      </div>
+    );
+  },
 
   Checkbox: ({ node, commonProps }) => (
     <label {...commonProps} style={{ ...commonProps.style, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>

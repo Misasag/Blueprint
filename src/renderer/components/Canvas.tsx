@@ -2,11 +2,18 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { UINode } from '../../parser';
 import { canvasUIStore } from './canvas/dragStore';
 import { RenderNode } from './RenderNode';
-
+import { StyleEditDialog } from './StyleEditDialog';
+import { findNodeById } from '../store/treeUtils';
 
 const ZOOM_MIN = 0.25;
 const ZOOM_MAX = 2;
 const ZOOM_STEP = 0.1;
+
+interface ContextMenuState {
+  nodeId: string;
+  x: number;
+  y: number;
+}
 
 interface CanvasProps {
   nodes: UINode[];
@@ -14,10 +21,25 @@ interface CanvasProps {
   onSelectNode: (nodeId: string | null) => void;
   onAddNode: (tag: string, parentId: string | null, index?: number) => void;
   onMoveNode: (nodeId: string, targetParentId: string | null, targetIndex: number) => void;
+  onUpdateProp: (nodeId: string, propName: string, value: string) => void;
+  onDeleteNode: (nodeId: string) => void;
 }
 
-export const Canvas: React.FC<CanvasProps> = ({ nodes, selectedNodeId, onSelectNode, onAddNode, onMoveNode }) => {
+export const Canvas: React.FC<CanvasProps> = ({ nodes, selectedNodeId, onSelectNode, onAddNode, onMoveNode, onUpdateProp, onDeleteNode }) => {
   const [zoom, setZoom] = useState(1);
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const [styleDialog, setStyleDialog] = useState<{ nodeId: string; x: number; y: number } | null>(null);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    const nodeEl = (e.target as HTMLElement).closest('[data-node-id]');
+    if (!nodeEl) return;
+    e.preventDefault();
+    const nodeId = nodeEl.getAttribute('data-node-id')!;
+    onSelectNode(nodeId);
+    setContextMenu({ nodeId, x: e.clientX, y: e.clientY });
+  }, [onSelectNode]);
+
+  const closeContextMenu = useCallback(() => setContextMenu(null), []);
 
   const zoomIn = useCallback(() => setZoom(z => Math.min(ZOOM_MAX, Math.round((z + ZOOM_STEP) * 100) / 100)), []);
   const zoomOut = useCallback(() => setZoom(z => Math.max(ZOOM_MIN, Math.round((z - ZOOM_STEP) * 100) / 100)), []);
@@ -84,6 +106,43 @@ export const Canvas: React.FC<CanvasProps> = ({ nodes, selectedNodeId, onSelectN
         <button onClick={zoomIn} style={zoomBtnStyle} title="ズームイン">+</button>
       </div>
 
+      {/* コンテキストメニュー */}
+      {contextMenu && (
+        <>
+          <div onClick={closeContextMenu} style={{ position: 'fixed', inset: 0, zIndex: 998 }} />
+          <div style={{
+            position: 'fixed', left: contextMenu.x, top: contextMenu.y, zIndex: 999,
+            background: 'var(--bg-primary)', border: '1px solid var(--border-color)',
+            borderRadius: '6px', boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+            padding: '4px', minWidth: '160px',
+          }}>
+            <button onClick={() => {
+              setStyleDialog({ nodeId: contextMenu.nodeId, x: contextMenu.x, y: contextMenu.y });
+              setContextMenu(null);
+            }} style={menuItemStyle}>
+              スタイルを編集
+            </button>
+            <div style={{ height: '1px', background: 'var(--border-color)', margin: '4px 0' }} />
+            <button onClick={() => {
+              onDeleteNode(contextMenu.nodeId);
+              setContextMenu(null);
+            }} style={{ ...menuItemStyle, color: '#d32f2f' }}>
+              削除
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* スタイル編集ダイアログ */}
+      {styleDialog && findNodeById(nodes, styleDialog.nodeId) && (
+        <StyleEditDialog
+          nodeTag={findNodeById(nodes, styleDialog.nodeId)!.tag}
+          position={{ x: styleDialog.x, y: styleDialog.y }}
+          onAdd={(propName, value) => onUpdateProp(styleDialog.nodeId, propName, value)}
+          onClose={() => setStyleDialog(null)}
+        />
+      )}
+
       {/* キャンバス本体 */}
       <div
         style={{
@@ -97,6 +156,7 @@ export const Canvas: React.FC<CanvasProps> = ({ nodes, selectedNodeId, onSelectN
         onClick={(e) => {
           if (e.target === e.currentTarget) onSelectNode(null);
         }}
+        onContextMenu={handleContextMenu}
         onDragOver={(e) => {
           e.preventDefault();
           e.dataTransfer.dropEffect = e.dataTransfer.types.includes('application/x-blueprint-tag') ? 'copy' : 'move';
@@ -142,5 +202,12 @@ const zoomBtnStyle: React.CSSProperties = {
   background: 'transparent', cursor: 'pointer', fontSize: '14px',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   color: 'var(--text-primary)',
+};
+
+const menuItemStyle: React.CSSProperties = {
+  display: 'block', width: '100%', padding: '6px 12px',
+  border: 'none', background: 'transparent', textAlign: 'left',
+  fontSize: '12px', cursor: 'pointer', borderRadius: '4px',
+  fontFamily: 'inherit', color: 'var(--text-primary)',
 };
 

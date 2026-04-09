@@ -33,19 +33,37 @@ export const VALID_TAGS = [
   'Navbar', 'Sidebar', 'Breadcrumb', 'Pagination', 'Tabs', 'Stepper', 'AppBar',
   // 複合コンポーネント系
   'Card', 'Modal', 'Table', 'Accordion', 'Carousel', 'Kanban', 'Timeline', 'List', 'Tree', 'PricingTable', 'FAQSection', 'NotificationPanel',
+  // スロットタグ（複合コンポーネントの子要素）
+  'CardHeader', 'CardBody', 'CardFooter',
+  'ModalHeader', 'ModalBody', 'ModalFooter',
+  'TableHeader', 'TableRow', 'TableCell',
   // フィードバック系
   'Toast', 'Alert', 'Tooltip', 'Popover', 'Spinner', 'ConfirmDialog', 'EmptyState',
 ] as const;
 
 export type TagName = (typeof VALID_TAGS)[number];
 
-/** 共通プロパティ */
+/** 共通プロパティ（全タグ共通で利用可能） */
 export const COMMON_PROPS = [
-  'width', 'height', 'padding', 'margin', 'color', 'background', 'radius', 'border', 'shadow', 'opacity',
+  'width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight',
+  'padding', 'margin',
+  'color', 'background', 'opacity',
+  'radius', 'border', 'shadow',
+  'overflow', 'zIndex', 'grow', 'alignSelf',
 ] as const;
+
+/** プロパティパネルのセクション定義 */
+export const STYLE_SECTIONS = {
+  SIZE:       ['width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight'],
+  SPACING:    ['padding', 'margin'],
+  APPEARANCE: ['color', 'background', 'opacity'],
+  BORDER:     ['radius', 'border', 'shadow'],
+  LAYOUT:     ['overflow', 'zIndex', 'grow', 'alignSelf'],
+} as const;
 
 /** タグ別の固有プロパティ */
 export const TAG_PROPS: Record<string, string[]> = {
+  // レイアウト系
   Screen: ['name'],
   VStack: ['gap', 'align', 'justify'],
   HStack: ['gap', 'align', 'justify'],
@@ -55,25 +73,27 @@ export const TAG_PROPS: Record<string, string[]> = {
   SplitScreen: ['ratio'],
   HeroSection: ['title', 'subtitle', 'background', 'height', 'align'],
   BentoGrid: ['cols', 'gap', 'rows'],
-  Text: ['size', 'weight', 'align', 'lineHeight'],
-  Image: ['src', 'alt', 'fit'],
+  // コンテンツ系
+  Text: ['size', 'weight', 'align', 'lineHeight', 'decoration', 'transform', 'truncate', 'maxLines'],
+  Image: ['src', 'alt', 'fit', 'fallback'],
   Icon: ['name', 'size'],
   Divider: ['direction', 'thickness'],
-  Avatar: ['src', 'size', 'name'],
-  Badge: ['label', 'variant'],
-  Tag: ['label', 'variant'],
-  ProgressBar: ['value', 'max'],
+  Avatar: ['src', 'size', 'name', 'status'],
+  Badge: ['label', 'variant', 'dot'],
+  Tag: ['label', 'variant', 'closable'],
+  ProgressBar: ['value', 'max', 'label', 'showPercent'],
   Skeleton: ['width', 'height', 'variant'],
   StatCard: ['label', 'value', 'trend'],
-  Chart: ['type', 'data'],
-  Button: ['label', 'variant', 'navigate', 'disabled'],
-  Input: ['placeholder', 'type', 'value', 'disabled'],
-  Textarea: ['placeholder', 'rows', 'value'],
-  Select: ['options', 'placeholder', 'value'],
-  Checkbox: ['label', 'checked'],
-  Radio: ['label', 'checked', 'group'],
-  Toggle: ['label', 'checked'],
-  Slider: ['min', 'max', 'value', 'step'],
+  Chart: ['type', 'data', 'title', 'legend'],
+  // 入力系
+  Button: ['label', 'variant', 'navigate', 'disabled', 'icon', 'iconPosition', 'loading', 'size'],
+  Input: ['placeholder', 'type', 'value', 'disabled', 'label', 'error', 'helperText', 'required', 'prefix', 'suffix'],
+  Textarea: ['placeholder', 'rows', 'value', 'label', 'error', 'maxLength'],
+  Select: ['options', 'placeholder', 'value', 'label', 'multiple', 'searchable', 'error'],
+  Checkbox: ['label', 'checked', 'disabled', 'indeterminate'],
+  Radio: ['label', 'checked', 'group', 'disabled'],
+  Toggle: ['label', 'checked', 'disabled', 'size'],
+  Slider: ['min', 'max', 'value', 'step', 'label', 'showValue'],
   DatePicker: ['placeholder', 'value'],
   FileUpload: ['accept', 'label'],
   SearchBar: ['placeholder'],
@@ -82,37 +102,50 @@ export const TAG_PROPS: Record<string, string[]> = {
   OTPInput: ['length', 'placeholder'],
   ColorPicker: ['value', 'label'],
   Link: ['label', 'navigate', 'href'],
-  Navbar: ['title'],
-  Sidebar: ['collapsed'],
+  // ナビゲーション系
+  Navbar: ['title', 'items', 'logo', 'sticky'],
+  Sidebar: ['collapsed', 'items', 'width'],
   Breadcrumb: ['items'],
   Pagination: ['total', 'current', 'pageSize'],
-  Tabs: ['items', 'active'],
+  Tabs: ['items', 'active', 'variant'],
   Stepper: ['steps', 'current'],
-  AppBar: ['title', 'back'],
-  Card: ['title', 'subtitle'],
-  Modal: ['title', 'open'],
-  Table: ['columns', 'rows'],
-  Accordion: ['items'],
-  Carousel: ['items', 'autoplay'],
+  AppBar: ['title', 'back', 'actions'],
+  // 複合コンポーネント系
+  Card: ['title', 'subtitle', 'image', 'variant', 'hoverable'],
+  Modal: ['title', 'open', 'size', 'closable'],
+  Table: ['columns', 'rows', 'striped', 'bordered', 'cellAlign', 'headerBackground', 'headerColor', 'columnWidths'],
+  Accordion: ['items', 'defaultOpen', 'multiple'],
+  Carousel: ['items', 'autoplay', 'dots', 'arrows', 'interval'],
   Kanban: ['columns'],
   Timeline: ['items'],
-  List: ['items'],
+  List: ['items', 'divider', 'ordered'],
   Tree: ['items'],
   PricingTable: ['plans', 'columns'],
   FAQSection: ['items'],
   NotificationPanel: ['items', 'title'],
-  Toast: ['message', 'variant'],
-  Alert: ['message', 'variant'],
+  // スロットタグ
+  CardHeader: [], CardBody: [], CardFooter: [],
+  ModalHeader: [], ModalBody: [], ModalFooter: [],
+  TableHeader: [], TableRow: [],
+  TableCell: ['width', 'align', 'weight'],
+  // フィードバック系
+  Toast: ['message', 'variant', 'position', 'closable'],
+  Alert: ['message', 'variant', 'closable', 'icon', 'title'],
   Tooltip: ['content'],
   Popover: ['content'],
   Spinner: ['size'],
-  ConfirmDialog: ['title', 'message'],
-  EmptyState: ['title', 'message', 'icon'],
+  ConfirmDialog: ['title', 'message', 'confirmLabel', 'cancelLabel'],
+  EmptyState: ['title', 'message', 'icon', 'actionLabel'],
 };
+
+/** 構造プロパティ（CSSではないためbuildStyleで除外する） */
+export const STRUCTURAL_PROPS = new Set(
+  Object.values(TAG_PROPS).flat()
+);
 
 /** テキストコンテンツを持てるタグ */
 export const TEXT_TAGS: TagName[] = [
-  'Text', 'Button', 'Link', 'Alert', 'Badge', 'Toast', 'Tag',
+  'Text', 'Button', 'Link', 'Alert', 'Badge', 'Toast', 'Tag', 'TableCell',
 ];
 
 /** タグの日本語説明 */
@@ -179,7 +212,71 @@ export const TAG_DESCRIPTIONS: Record<string, string> = {
   Spinner: 'スピナー',
   ConfirmDialog: '確認ダイアログ',
   EmptyState: 'エンプティステート',
+  CardHeader: 'カードヘッダー',
+  CardBody: 'カード本体',
+  CardFooter: 'カードフッター',
+  ModalHeader: 'モーダルヘッダー',
+  ModalBody: 'モーダル本体',
+  ModalFooter: 'モーダルフッター',
+  TableHeader: 'テーブルヘッダー行',
+  TableRow: 'テーブルデータ行',
+  TableCell: 'テーブルセル',
 };
+
+type SectionName = keyof typeof STYLE_SECTIONS;
+
+/** タグカテゴリごとに表示するセクション */
+const CATEGORY_SECTIONS: Record<string, readonly SectionName[]> = {
+  LAYOUT:     ['SIZE', 'SPACING', 'APPEARANCE', 'BORDER', 'LAYOUT'],
+  CONTENT:    ['SIZE', 'APPEARANCE'],
+  INPUT:      ['SIZE', 'SPACING', 'APPEARANCE', 'BORDER'],
+  NAVIGATION: ['SIZE', 'SPACING', 'APPEARANCE', 'BORDER'],
+  COMPOSITE:  ['SIZE', 'SPACING', 'APPEARANCE', 'BORDER'],
+  FEEDBACK:   ['APPEARANCE', 'BORDER'],
+};
+
+/** カテゴリデフォルトと異なるタグの個別オーバーライド */
+const TAG_SECTION_OVERRIDES: Partial<Record<string, readonly SectionName[]>> = {
+  // Content — テキスト系は SIZE 不要、画像は BORDER 必要
+  Text:        ['APPEARANCE'],
+  Icon:        ['APPEARANCE'],
+  Divider:     ['APPEARANCE'],
+  Avatar:      ['APPEARANCE', 'BORDER'],
+  Image:       ['SIZE', 'APPEARANCE', 'BORDER'],
+  ProgressBar: ['SIZE', 'APPEARANCE'],
+  Chart:       ['SIZE', 'APPEARANCE', 'BORDER'],
+  // Input — インライン系は SIZE/SPACING 不要
+  Button:      ['SIZE', 'SPACING', 'APPEARANCE', 'BORDER'],
+  Checkbox:    ['APPEARANCE'],
+  Radio:       ['APPEARANCE'],
+  Toggle:      ['APPEARANCE'],
+  Slider:      ['SIZE', 'APPEARANCE'],
+  Link:        ['APPEARANCE'],
+  // Composite — モーダルは LAYOUT 含む
+  Modal:       ['SIZE', 'SPACING', 'APPEARANCE', 'BORDER'],
+  Card:        ['SIZE', 'SPACING', 'APPEARANCE', 'BORDER'],
+  // Feedback
+  Spinner:     ['APPEARANCE'],
+};
+
+/** タグに表示すべきスタイルセクション一覧を返す */
+export function getStyleSectionsForTag(tag: string): { name: SectionName; props: readonly string[] }[] {
+  let sectionNames: readonly SectionName[] | undefined;
+
+  if (tag in TAG_SECTION_OVERRIDES) {
+    sectionNames = TAG_SECTION_OVERRIDES[tag];
+  } else {
+    for (const [category, tags] of Object.entries(TAG_CATEGORIES)) {
+      if ((tags as readonly string[]).includes(tag)) {
+        sectionNames = CATEGORY_SECTIONS[category];
+        break;
+      }
+    }
+  }
+
+  const names = sectionNames ?? (['SIZE', 'SPACING', 'APPEARANCE', 'BORDER', 'LAYOUT'] as SectionName[]);
+  return names.map(name => ({ name, props: STYLE_SECTIONS[name] }));
+}
 
 /** タグのカテゴリ分類 */
 export const TAG_CATEGORIES: Record<string, TagName[]> = {
@@ -187,6 +284,7 @@ export const TAG_CATEGORIES: Record<string, TagName[]> = {
   'CONTENT': ['Text', 'Image', 'Icon', 'Divider', 'Avatar', 'Badge', 'Tag', 'ProgressBar', 'Skeleton', 'StatCard', 'Chart'],
   'INPUT': ['Button', 'Input', 'Textarea', 'Select', 'Checkbox', 'Radio', 'Toggle', 'Slider', 'DatePicker', 'FileUpload', 'SearchBar', 'Autocomplete', 'TagInput', 'OTPInput', 'ColorPicker', 'Link'],
   'NAVIGATION': ['Navbar', 'Sidebar', 'Breadcrumb', 'Pagination', 'Tabs', 'Stepper', 'AppBar'],
-  'COMPOSITE': ['Card', 'Modal', 'Table', 'Accordion', 'Carousel', 'Kanban', 'Timeline', 'List', 'Tree', 'PricingTable', 'FAQSection', 'NotificationPanel'],
+  'COMPOSITE': ['Card', 'Modal', 'Table', 'Accordion', 'Carousel', 'Kanban', 'Timeline', 'List', 'Tree', 'PricingTable', 'FAQSection', 'NotificationPanel',
+    'CardHeader', 'CardBody', 'CardFooter', 'ModalHeader', 'ModalBody', 'ModalFooter', 'TableHeader', 'TableRow', 'TableCell'],
   'FEEDBACK': ['Toast', 'Alert', 'Tooltip', 'Popover', 'Spinner', 'ConfirmDialog', 'EmptyState'],
 };
