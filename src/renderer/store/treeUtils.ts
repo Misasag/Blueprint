@@ -152,6 +152,130 @@ export function defaultPropsForTag(tag: string): Record<string, string> {
     Line: { length: '100', direction: 'horizontal', strokeWidth: '1' },
     Arrow: { length: '100', direction: 'right', strokeWidth: '2' },
     Polygon: { sides: '3', size: '48', background: '#e5e7eb' },
+    TreeNode: { label: 'Node' },
   };
   return defaults[tag] ?? {};
+}
+
+/** ノード生成ヘルパー */
+function n(tag: string, props: Record<string, string> = {}, children: UINode[] = [], textContent?: string): UINode {
+  return { id: '', tag, props: { ...defaultPropsForTag(tag), ...props }, children, textContent };
+}
+
+/** デフォルト子要素を生成する */
+export function defaultChildrenForTag(tag: string): UINode[] {
+  switch (tag) {
+    case 'Card':
+      return [
+        n('CardHeader', {}, [n('Text', { size: '16', weight: 'bold' }, [], 'タイトル')]),
+        n('CardBody', {}, [n('Text', {}, [], '内容')]),
+      ];
+    case 'Modal':
+      return [
+        n('ModalHeader', {}, [n('Text', { size: '16', weight: 'bold' }, [], '確認')]),
+        n('ModalBody', {}, [n('Text', {}, [], '内容')]),
+        n('ModalFooter', {}, [
+          n('Button', { label: 'キャンセル', variant: 'outlined' }),
+          n('Button', { label: 'OK' }),
+        ]),
+      ];
+    case 'Table':
+      return [
+        n('TableHeader', {}, [
+          n('TableCell', { weight: 'bold' }, [], '列1'),
+          n('TableCell', { weight: 'bold' }, [], '列2'),
+          n('TableCell', { weight: 'bold' }, [], '列3'),
+        ]),
+        n('TableRow', {}, [
+          n('TableCell', {}, [], 'データ1'),
+          n('TableCell', {}, [], 'データ2'),
+          n('TableCell', {}, [], 'データ3'),
+        ]),
+      ];
+    case 'Accordion':
+    case 'FAQSection':
+      return [
+        n('AccordionItem', {}, [
+          n('AccordionHeader', {}, [n('Text', { weight: 'bold' }, [], 'セクション1')]),
+          n('AccordionBody', {}, [n('Text', {}, [], '内容1')]),
+        ]),
+        n('AccordionItem', {}, [
+          n('AccordionHeader', {}, [n('Text', { weight: 'bold' }, [], 'セクション2')]),
+          n('AccordionBody', {}, [n('Text', {}, [], '内容2')]),
+        ]),
+      ];
+    case 'Tabs':
+      return [
+        n('TabItem', {}, [
+          n('TabLabel', {}, [n('Text', {}, [], 'タブ1')]),
+          n('TabPanel', {}, [n('Text', {}, [], 'タブ1の内容')]),
+        ]),
+        n('TabItem', {}, [
+          n('TabLabel', {}, [n('Text', {}, [], 'タブ2')]),
+          n('TabPanel', {}, [n('Text', {}, [], 'タブ2の内容')]),
+        ]),
+        n('TabItem', {}, [
+          n('TabLabel', {}, [n('Text', {}, [], 'タブ3')]),
+          n('TabPanel', {}, [n('Text', {}, [], 'タブ3の内容')]),
+        ]),
+      ];
+    case 'List':
+    case 'Timeline':
+    case 'NotificationPanel':
+      return [
+        n('Text', {}, [], '項目1'),
+        n('Text', {}, [], '項目2'),
+        n('Text', {}, [], '項目3'),
+      ];
+    case 'Tree':
+      return [
+        n('TreeNode', { label: 'Root' }, [
+          n('TreeNode', { label: 'Child 1' }),
+        ]),
+        n('TreeNode', { label: 'Item 2' }),
+      ];
+    case 'Kanban':
+      return [
+        n('Box', { padding: '8' }, [n('Text', { weight: 'bold' }, [], 'Todo')]),
+        n('Box', { padding: '8' }, [n('Text', { weight: 'bold' }, [], 'In Progress')]),
+        n('Box', { padding: '8' }, [n('Text', { weight: 'bold' }, [], 'Done')]),
+      ];
+    case 'Carousel':
+      return [
+        n('Box', { padding: '16' }, [n('Text', { align: 'center' }, [], 'スライド1')]),
+        n('Box', { padding: '16' }, [n('Text', { align: 'center' }, [], 'スライド2')]),
+        n('Box', { padding: '16' }, [n('Text', { align: 'center' }, [], 'スライド3')]),
+      ];
+    case 'PricingTable':
+      return [
+        n('Card', { variant: 'outlined' }, [
+          n('CardHeader', {}, [n('Text', { weight: 'bold' }, [], 'Free')]),
+          n('CardBody', {}, [n('Text', { size: '24', weight: 'bold' }, [], '$0/month')]),
+        ]),
+        n('Card', { variant: 'outlined' }, [
+          n('CardHeader', {}, [n('Text', { weight: 'bold' }, [], 'Pro')]),
+          n('CardBody', {}, [n('Text', { size: '24', weight: 'bold' }, [], '$19/month')]),
+        ]),
+        n('Card', { variant: 'outlined' }, [
+          n('CardHeader', {}, [n('Text', { weight: 'bold' }, [], 'Enterprise')]),
+          n('CardBody', {}, [n('Text', { size: '24', weight: 'bold' }, [], '$49/month')]),
+        ]),
+      ];
+    case 'Navbar':
+    case 'Sidebar':
+    case 'Breadcrumb':
+      return [
+        n('Link', { label: 'Link 1' }),
+        n('Link', { label: 'Link 2' }),
+        n('Link', { label: 'Link 3' }),
+      ];
+    case 'Stepper':
+      return [
+        n('Text', {}, [], 'Step 1'),
+        n('Text', {}, [], 'Step 2'),
+        n('Text', {}, [], 'Step 3'),
+      ];
+    default:
+      return [];
+  }
 }

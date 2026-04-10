@@ -296,15 +296,22 @@ OTHER
 ### スロットタグ（複合コンポーネントの子要素）
 
 ```jsx
-<CardHeader>    // Card のヘッダー領域
-<CardBody>      // Card のコンテンツ領域
-<CardFooter>    // Card のフッター領域
-<ModalHeader>   // Modal のヘッダー領域
-<ModalBody>     // Modal のコンテンツ領域
-<ModalFooter>   // Modal のフッター領域
-<TableHeader>   // Table のヘッダー行
-<TableRow>      // Table のデータ行
-<TableCell>     // Table のセル
+<CardHeader>      // Card のヘッダー領域
+<CardBody>        // Card のコンテンツ領域
+<CardFooter>      // Card のフッター領域
+<ModalHeader>     // Modal のヘッダー領域
+<ModalBody>       // Modal のコンテンツ領域
+<ModalFooter>     // Modal のフッター領域
+<TableHeader>     // Table のヘッダー行
+<TableRow>        // Table のデータ行
+<TableCell>       // Table のセル
+<AccordionItem>   // Accordion の1つのセクション（見出し + 開閉コンテンツ）
+<AccordionHeader> // AccordionItem の見出し部分
+<AccordionBody>   // AccordionItem の開閉コンテンツ部分
+<TabItem>         // Tabs の1つのタブ（ラベル + パネルコンテンツ）
+<TabLabel>        // TabItem のラベル部分
+<TabPanel>        // TabItem のパネルコンテンツ部分
+<TreeNode>        // Tree の1つのノード。ネストで階層を表現する
 ```
 
 ### フィードバック系
@@ -325,67 +332,42 @@ OTHER
 
 ### 基本ルール
 
-複合コンポーネント（Card, Modal, Table 等）は2つのモードで記述できる。
+複合コンポーネント（Card, Modal, Table 等）は**子要素ベースで構成する**。カンマ区切りのテキストプロパティで子を生成する簡易モードは使わない。
 
-**1. Shortcut props（簡易モード）**
+理由: 簡易モードではキャンバス上で個別の子要素を選択・編集・追加できない。エディタで一から UI を組み立てるためには、全ての要素が独立したノードとして操作可能でなければならない。
 
-```jsx
-<Card title="My Card" subtitle="Description" />
-```
-
-propsで完結する。個別のスタイリングはできない。
-
-**2. Slot children（フル制御モード）**
+### Card
 
 ```jsx
-<Card>
+<Card variant="outlined">
   <CardHeader>
-    <Text size="18" weight="bold" color="#333">My Card</Text>
+    <Text size="18" weight="bold">タイトル</Text>
   </CardHeader>
   <CardBody>
-    <Text>Description</Text>
-    <Image src="photo.png" />
+    <Text>内容</Text>
   </CardBody>
   <CardFooter>
-    <HStack gap="8">
-      <Button label="Action" />
-      <Button label="Cancel" variant="outlined" />
-    </HStack>
+    <Button label="アクション" />
   </CardFooter>
 </Card>
 ```
 
-スロットタグで構造を明示し、各部分を個別にスタイリングできる。
-
-### 優先ルール
-
-- **slot children > shortcut props**（スロット単位の上書き）
-- `<CardHeader>` が子にあれば `title` props を無視
-- `<CardBody>` がなくても `title` 以外の子要素は body 扱い
-- スロットタグのない子要素はデフォルト領域に配置
-
-### Table の記述例
+### Table
 
 ```jsx
-<!-- 簡易: propsだけ -->
-<Table columns="名前,年齢,役職" striped bordered />
-
-<!-- フル制御: slot childrenで構造化 -->
-<Table bordered>
+<Table bordered striped>
   <TableHeader>
-    <TableCell width="200" weight="bold">名前</TableCell>
-    <TableCell width="80" align="center">年齢</TableCell>
-    <TableCell>役職</TableCell>
+    <TableCell weight="bold">名前</TableCell>
+    <TableCell weight="bold">年齢</TableCell>
   </TableHeader>
   <TableRow>
     <TableCell>田中太郎</TableCell>
-    <TableCell align="center">28</TableCell>
-    <TableCell>エンジニア</TableCell>
+    <TableCell>28</TableCell>
   </TableRow>
 </Table>
 ```
 
-### Modal の記述例
+### Modal
 
 ```jsx
 <Modal size="medium" closable>
@@ -403,6 +385,138 @@ propsで完結する。個別のスタイリングはできない。
   </ModalFooter>
 </Modal>
 ```
+
+### Accordion
+
+```jsx
+<Accordion defaultOpen="0" multiple="true">
+  <AccordionItem>
+    <AccordionHeader>
+      <Text weight="bold">セクション1</Text>
+    </AccordionHeader>
+    <AccordionBody>
+      <Text>内容1</Text>
+    </AccordionBody>
+  </AccordionItem>
+  <AccordionItem>
+    <AccordionHeader>
+      <Text weight="bold">セクション2</Text>
+    </AccordionHeader>
+    <AccordionBody>
+      <Text>内容2</Text>
+    </AccordionBody>
+  </AccordionItem>
+</Accordion>
+```
+
+### Tabs
+
+```jsx
+<Tabs active="0" variant="underline">
+  <TabItem>
+    <TabLabel>タブ1</TabLabel>
+    <TabPanel>
+      <Text>タブ1の内容</Text>
+    </TabPanel>
+  </TabItem>
+  <TabItem>
+    <TabLabel>タブ2</TabLabel>
+    <TabPanel>
+      <Text>タブ2の内容</Text>
+    </TabPanel>
+  </TabItem>
+</Tabs>
+```
+
+### List / Timeline / Kanban / PricingTable 等
+
+全て同様に、子要素を直接配置する。
+
+```jsx
+<List divider="true">
+  <Text>項目1</Text>
+  <Text>項目2</Text>
+  <Text>項目3</Text>
+</List>
+
+<PricingTable>
+  <Card variant="outlined">
+    <CardHeader><Text weight="bold">Free</Text></CardHeader>
+    <CardBody><Text size="24" weight="bold">$0/month</Text></CardBody>
+  </Card>
+  <Card variant="outlined">
+    <CardHeader><Text weight="bold">Pro</Text></CardHeader>
+    <CardBody><Text size="24" weight="bold">$19/month</Text></CardBody>
+  </Card>
+</PricingTable>
+```
+
+### Tree
+
+TreeNode をネストすることで階層を表現する。
+
+```jsx
+<Tree>
+  <TreeNode label="Root">
+    <TreeNode label="Child 1">
+      <TreeNode label="Grandchild 1" />
+    </TreeNode>
+    <TreeNode label="Child 2" />
+  </TreeNode>
+</Tree>
+```
+
+### Carousel
+
+```jsx
+<Carousel dots="true" arrows="true">
+  <Box padding="16" background="#f0f0f0">
+    <Text align="center">スライド1</Text>
+  </Box>
+  <Box padding="16" background="#e0e0e0">
+    <Text align="center">スライド2</Text>
+  </Box>
+</Carousel>
+```
+
+### ナビゲーション系（Navbar, Sidebar, Breadcrumb, Stepper）
+
+```jsx
+<Navbar title="MyApp" logo="true">
+  <Link label="Home" />
+  <Link label="About" />
+  <Link label="Contact" />
+</Navbar>
+
+<Sidebar width="200">
+  <Link label="Dashboard" />
+  <Link label="Settings" />
+</Sidebar>
+```
+
+### デフォルト子要素
+
+コンポーネントパネルからD&Dで追加した際、空のコンポーネントではなく、編集の起点となるデフォルトの子要素を自動生成する。
+
+| コンポーネント | デフォルト子要素 |
+|---|---|
+| Card | CardHeader（Text）+ CardBody（Text）|
+| Modal | ModalHeader（Text）+ ModalBody（Text）+ ModalFooter（Button x 2）|
+| Table | TableHeader（TableCell x 3）+ TableRow（TableCell x 3）|
+| Accordion | AccordionItem x 2（各 AccordionHeader + AccordionBody）|
+| Tabs | TabItem x 3（各 TabLabel + TabPanel）|
+| List | Text x 3 |
+| Timeline | Text x 3 |
+| Tree | TreeNode x 2（1つ目に TreeNode 子要素1つ）|
+| Kanban | Box x 3（各に Text 子要素）|
+| Carousel | Box x 3 |
+| PricingTable | Card x 3（各に CardHeader + CardBody）|
+| FAQSection | AccordionItem x 3 |
+| NotificationPanel | Text x 3 |
+| Navbar | Link x 3 |
+| Sidebar | Link x 3 |
+| Breadcrumb | Link x 3 |
+| Stepper | Text x 3 |
 
 ---
 
@@ -461,36 +575,51 @@ propsで完結する。個別のスタイリングはできない。
 
 | タグ | プロパティ |
 |------|----------|
-| Card | title, subtitle, image, variant, hoverable |
-| Modal | title, open, size, closable |
-| Table | columns, rows, striped, bordered, cellAlign, headerBackground, headerColor, columnWidths |
-| Accordion | items, defaultOpen, multiple |
-| Carousel | items, autoplay, dots, arrows, interval |
-| List | items, divider, ordered |
-| Kanban | columns |
-| Timeline | items |
-| Tree | items |
-| PricingTable | plans, columns |
-| FAQSection | items |
-| NotificationPanel | items, title |
+| Card | variant, hoverable |
+| Modal | size, closable |
+| Table | striped, bordered, cellAlign, headerBackground, headerColor |
+| Accordion | defaultOpen, multiple |
+| Carousel | autoplay, dots, arrows, interval |
+| List | divider, ordered |
+| Kanban | |
+| Timeline | |
+| Tree | |
+| PricingTable | |
+| FAQSection | |
+| NotificationPanel | title |
 
 ### スロットタグ
 
 | タグ | プロパティ |
 |------|----------|
+| CardHeader | |
+| CardBody | |
+| CardFooter | |
+| ModalHeader | |
+| ModalBody | |
+| ModalFooter | |
+| TableHeader | |
+| TableRow | |
 | TableCell | width, align, weight |
+| AccordionItem | |
+| AccordionHeader | |
+| AccordionBody | |
+| TabItem | |
+| TabLabel | |
+| TabPanel | |
+| TreeNode | label |
 
 ### ナビゲーション系
 
 | タグ | プロパティ |
 |------|----------|
-| Navbar | title, items, logo, sticky |
-| Sidebar | collapsed, items, width |
+| Navbar | title, logo, sticky |
+| Sidebar | collapsed, width |
 | AppBar | title, back, actions |
-| Breadcrumb | items |
+| Breadcrumb | |
 | Pagination | total, current, pageSize |
-| Tabs | items, active, variant |
-| Stepper | steps, current |
+| Tabs | active, variant |
+| Stepper | current |
 
 ### フィードバック系
 
@@ -601,6 +730,58 @@ width   [ 100 ▲▼ %  ]
 - 単位は右端に常に表示する（px がデフォルト）
 - 単位の変更: 単位部分をクリックして `px` / `%` / `em` / `rem` を切り替え
 - 単位が不要な属性（opacity, zIndex, grow 等）は単位表示なし
+
+##### 子要素管理
+
+複合コンポーネント（Table, Accordion, Tabs 等）を選択したとき、プロパティパネルに「CHILDREN」セクションを表示する。子要素の一覧と追加・削除ボタンを提供する。
+
+```
+CHILDREN
+  TableHeader          ✕
+  TableRow             ✕
+  TableRow             ✕
+              [+ 行を追加]
+```
+
+- 子要素の一覧: 直接の子要素をタグ名で表示。クリックで選択（キャンバスと連動）
+- ✕ ボタン: その子要素を削除
+- 追加ボタン: コンポーネントに応じた子要素を末尾に追加
+
+追加ボタンで追加される子要素はコンポーネントごとに決まっている:
+
+| 親コンポーネント | 追加ボタンのラベル | 追加される子要素 |
+|---|---|---|
+| Table | + 行を追加 | TableRow（TableCell x 列数）。列数は TableHeader の TableCell 数を参照。TableHeader がなければ最初の TableRow の TableCell 数。いずれもなければ 3 |
+| Accordion | + セクションを追加 | AccordionItem（AccordionHeader + AccordionBody） |
+| Tabs | + タブを追加 | TabItem（TabLabel + TabPanel） |
+| List | + 項目を追加 | Text |
+| Timeline | + イベントを追加 | Text |
+| Tree | + ノードを追加 | TreeNode |
+| Kanban | + 列を追加 | Box（Text 子要素付き） |
+| Carousel | + スライドを追加 | Box |
+| PricingTable | + プランを追加 | Card（CardHeader + CardBody） |
+| FAQSection | + 質問を追加 | AccordionItem（AccordionHeader + AccordionBody） |
+| NotificationPanel | + 通知を追加 | Text |
+| Navbar | + リンクを追加 | Link |
+| Sidebar | + リンクを追加 | Link |
+| Breadcrumb | + パスを追加 | Link |
+| Stepper | + ステップを追加 | Text |
+| Card | + セクションを追加 | CardBody |
+| Modal | + セクションを追加 | ModalBody |
+
+スロットタグ（親の一部となるコンテナ）にも追加ボタンを定義する:
+
+| 親スロットタグ | 追加ボタンのラベル | 追加される子要素 |
+|---|---|---|
+| TableHeader | + セルを追加 | TableCell |
+| TableRow | + セルを追加 | TableCell |
+| AccordionItem | + コンテンツを追加 | AccordionBody（未存在時のみ） |
+| TabItem | + パネルを追加 | TabPanel（未存在時のみ） |
+| TreeNode | + 子ノードを追加 | TreeNode |
+| CardHeader / CardBody / CardFooter | （追加ボタンなし。D&Dで任意の要素を配置） | |
+| ModalHeader / ModalBody / ModalFooter | （追加ボタンなし。D&Dで任意の要素を配置） | |
+
+CHILDREN セクションはコンテナ要素（子を持てるタグ）を選択したときのみ表示する。レイアウト系（VStack, HStack, Grid 等）にも表示するが、追加ボタンは表示しない（任意の要素をD&Dで追加するため）。
 
 #### ツールバー
 

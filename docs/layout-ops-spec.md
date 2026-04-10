@@ -199,6 +199,7 @@ PARENT LAYOUT の属性を変更する場合:
 ```
 CONTENT       （textContent を持つタグのみ）
 TAG固有       （TAG_PROPS に定義された属性）
+CHILDREN      （子要素の一覧 + 追加・削除 — コンテナ要素のみ）
 SELF          （grow, alignSelf — 親がレイアウトコンテナの場合のみ）
 PARENT LAYOUT （親のレイアウト属性 — 親がレイアウトコンテナの場合のみ）
 SIZE

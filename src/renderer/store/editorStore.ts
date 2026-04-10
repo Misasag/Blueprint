@@ -3,7 +3,7 @@ import { UINode, ParseError, parseUI, serializeUI } from '../../parser';
 import {
   updateNodeInTree, findNodeById, findParentNode,
   removeNodeFromTree, removeNodesFromTree, isDescendant, collectIds,
-  defaultPropsForTag, deepCloneNode, insertNodeAt,
+  defaultPropsForTag, defaultChildrenForTag, deepCloneNode, insertNodeAt,
 } from './treeUtils';
 import { LEAF_TAGS } from '../components/canvas/utils';
 
@@ -35,7 +35,7 @@ type Action =
   | { type: 'SELECT_ADD'; nodeId: string }
   | { type: 'UPDATE_PROP'; nodeId: string; propName: string; value: string }
   | { type: 'UPDATE_TEXT'; nodeId: string; text: string }
-  | { type: 'ADD_NODE'; tag: string; parentId: string | null; index?: number }
+  | { type: 'ADD_NODE'; tag: string; parentId: string | null; index?: number; meta?: Record<string, number> }
   | { type: 'DELETE_NODE'; nodeId: string }
   | { type: 'DELETE_SELECTED' }
   | { type: 'MOVE_NODE'; nodeId: string; targetParentId: string | null; targetIndex: number }
@@ -154,11 +154,21 @@ function reducer(state: EditorReducerState, action: Action): EditorReducerState 
     }
 
     case 'ADD_NODE': {
+      let defaultChildren = defaultChildrenForTag(action.tag);
+      // TableRow の列数カスタマイズ
+      if (action.tag === 'TableRow' && action.meta?.colCount) {
+        const colCount = action.meta.colCount;
+        defaultChildren = Array.from({ length: colCount }, (_, i) => ({
+          id: '', tag: 'TableCell', props: {}, children: [], textContent: `データ${i + 1}`,
+        }));
+      }
+      const assignIds = (nodes: UINode[]): UINode[] =>
+        nodes.map(n => ({ ...n, id: generateDynamicId(), children: assignIds(n.children) }));
       const newNode: UINode = {
         id: generateDynamicId(),
         tag: action.tag,
         props: defaultPropsForTag(action.tag),
-        children: [],
+        children: assignIds(defaultChildren),
       };
       const newNodes = insertNodeAt(cur.nodes, action.parentId, action.index ?? (action.parentId === null ? cur.nodes.length : Infinity), [newNode]);
       return withNewNodes(state, newNodes, [newNode.id]);
@@ -440,7 +450,7 @@ export function useEditorStore() {
   const selectNodeAdd = useCallback((nodeId: string) => dispatch({ type: 'SELECT_ADD', nodeId }), []);
   const updateNodeProps = useCallback((nodeId: string, propName: string, value: string) => dispatch({ type: 'UPDATE_PROP', nodeId, propName, value }), []);
   const updateNodeText = useCallback((nodeId: string, text: string) => dispatch({ type: 'UPDATE_TEXT', nodeId, text }), []);
-  const addNode = useCallback((tag: string, parentId: string | null, index?: number) => dispatch({ type: 'ADD_NODE', tag, parentId, index }), []);
+  const addNode = useCallback((tag: string, parentId: string | null, index?: number, meta?: Record<string, number>) => dispatch({ type: 'ADD_NODE', tag, parentId, index, meta }), []);
   const deleteNode = useCallback((nodeId: string) => dispatch({ type: 'DELETE_NODE', nodeId }), []);
   const deleteSelected = useCallback(() => dispatch({ type: 'DELETE_SELECTED' }), []);
   const moveNode = useCallback((nodeId: string, targetParentId: string | null, targetIndex: number) => dispatch({ type: 'MOVE_NODE', nodeId, targetParentId, targetIndex }), []);

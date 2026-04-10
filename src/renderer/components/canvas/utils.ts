@@ -88,7 +88,7 @@ export const LEAF_TAGS = new Set([
   'Text', 'Image', 'Icon', 'Divider', 'Avatar', 'Badge', 'Tag', 'ProgressBar', 'Skeleton', 'StatCard', 'Chart',
   'Button', 'Input', 'Textarea', 'Select', 'Checkbox', 'Radio', 'Toggle', 'Slider', 'DatePicker',
   'FileUpload', 'SearchBar', 'Autocomplete', 'TagInput', 'OTPInput', 'ColorPicker', 'Link',
-  'Breadcrumb', 'Pagination', 'Stepper', 'Spinner',
+  'Pagination', 'Spinner',
   'Rectangle', 'Ellipse', 'Line', 'Arrow', 'Polygon',
 ]);
 
