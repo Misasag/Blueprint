@@ -1,26 +1,49 @@
 import React from 'react';
-import { Renderer, px } from '../utils';
+import { Renderer, px, VARIANT_COLORS, TOAST_VARIANT_COLORS } from '../utils';
 
 export const feedbackRenderers: Record<string, Renderer> = {
-  Alert: ({ node, commonProps }) => (
-    <div {...commonProps} style={{
-      ...commonProps.style,
-      padding: '10px 14px', borderRadius: '4px',
-      border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', fontSize: '13px',
-    }}>
-      {node.textContent ?? node.props.message ?? 'Alert'}
-    </div>
-  ),
+  Alert: ({ node, commonProps }) => {
+    const v = VARIANT_COLORS[node.props.variant ?? ''];
+    return (
+      <div {...commonProps} style={{
+        ...commonProps.style,
+        padding: '10px 14px', borderRadius: '4px', fontSize: '13px',
+        background: v?.bg ?? 'var(--bg-secondary)',
+        color: v?.text ?? undefined,
+        border: `1px solid ${v?.border ?? 'var(--border-color)'}`,
+        borderLeft: v ? `4px solid ${v.border}` : undefined,
+        display: 'flex', alignItems: 'flex-start', gap: '8px',
+      }}>
+        {node.props.icon && <span style={{ flexShrink: 0 }}>{node.props.icon}</span>}
+        <div style={{ flex: 1 }}>
+          {node.props.title && <div style={{ fontWeight: 600, marginBottom: '2px' }}>{node.props.title}</div>}
+          {node.textContent ?? node.props.message ?? 'Alert'}
+        </div>
+        {node.props.closable === 'true' && (
+          <span style={{ flexShrink: 0, cursor: 'pointer', opacity: 0.6 }}>✕</span>
+        )}
+      </div>
+    );
+  },
 
-  Toast: ({ node, commonProps }) => (
-    <div {...commonProps} style={{
-      ...commonProps.style,
-      padding: '10px 14px', borderRadius: '6px', background: '#333',
-      color: '#fff', fontSize: '13px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-    }}>
-      {node.props.message ?? 'Toast notification'}
-    </div>
-  ),
+  Toast: ({ node, commonProps }) => {
+    const v = TOAST_VARIANT_COLORS[node.props.variant ?? ''];
+    return (
+      <div {...commonProps} style={{
+        ...commonProps.style,
+        padding: '10px 14px', borderRadius: '6px',
+        background: v?.bg ?? '#333',
+        color: v?.text ?? '#fff',
+        fontSize: '13px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+        display: 'flex', alignItems: 'center', gap: '8px',
+      }}>
+        <span style={{ flex: 1 }}>{node.props.message ?? 'Toast notification'}</span>
+        {node.props.closable === 'true' && (
+          <span style={{ flexShrink: 0, cursor: 'pointer', opacity: 0.8 }}>✕</span>
+        )}
+      </div>
+    );
+  },
 
   Tooltip: ({ node, commonProps, children }) => (
     <div {...commonProps} style={{
@@ -62,8 +85,12 @@ export const feedbackRenderers: Record<string, Renderer> = {
       <div style={{ fontWeight: 600, marginBottom: '8px' }}>{node.props.title ?? '確認'}</div>
       <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>{node.props.message ?? '実行しますか？'}</div>
       <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-        <span style={{ padding: '4px 12px', border: '1px solid var(--border-color)', borderRadius: '4px', fontSize: '12px' }}>キャンセル</span>
-        <span style={{ padding: '4px 12px', background: 'var(--accent)', color: '#fff', borderRadius: '4px', fontSize: '12px' }}>OK</span>
+        <span style={{ padding: '4px 12px', border: '1px solid var(--border-color)', borderRadius: '4px', fontSize: '12px' }}>
+          {node.props.cancelLabel ?? 'キャンセル'}
+        </span>
+        <span style={{ padding: '4px 12px', background: 'var(--accent)', color: '#fff', borderRadius: '4px', fontSize: '12px' }}>
+          {node.props.confirmLabel ?? 'OK'}
+        </span>
       </div>
     </div>
   ),
@@ -73,6 +100,14 @@ export const feedbackRenderers: Record<string, Renderer> = {
       {node.props.icon && <div style={{ fontSize: '32px', marginBottom: '8px' }}>{node.props.icon}</div>}
       <div style={{ fontWeight: 600 }}>{node.props.title ?? 'データがありません'}</div>
       {node.props.message && <div style={{ fontSize: '12px', marginTop: '4px' }}>{node.props.message}</div>}
+      {node.props.actionLabel && (
+        <div style={{
+          display: 'inline-block', marginTop: '12px', padding: '8px 16px',
+          background: 'var(--accent)', color: '#fff', borderRadius: '4px', fontSize: '13px',
+        }}>
+          {node.props.actionLabel}
+        </div>
+      )}
     </div>
   ),
 };

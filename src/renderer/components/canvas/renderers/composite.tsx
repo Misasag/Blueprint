@@ -24,11 +24,17 @@ export const compositeRenderers: Record<string, Renderer> = {
     const { slots, rest } = extractSlots(children, ['CardHeader', 'CardBody', 'CardFooter']);
     const hasSlots = Object.keys(slots).length > 0;
 
+    const variant = node.props.variant ?? 'outlined';
+    const variantStyle: React.CSSProperties =
+      variant === 'elevated' ? { border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }
+      : variant === 'filled' ? { border: 'none', background: 'var(--bg-secondary)' }
+      : { border: '1px solid var(--border-color)' };
     return (
       <div {...commonProps} style={{
         ...commonProps.style,
-        border: '1px solid var(--border-color)', borderRadius: px(node.props.radius) ?? '8px',
-        padding: px(node.props.padding) ?? '16px', background: 'var(--bg-primary)',
+        ...variantStyle,
+        borderRadius: px(node.props.radius) ?? '8px',
+        padding: px(node.props.padding) ?? '16px', background: variantStyle.background ?? 'var(--bg-primary)',
         ...(node.props.hoverable === 'true' ? { transition: 'box-shadow 0.2s' } : {}),
       }}>
         {node.props.image && (
@@ -235,19 +241,29 @@ export const compositeRenderers: Record<string, Renderer> = {
   ),
 
   // --- 以下は既存（変更なし） ---
-  Accordion: ({ node, commonProps, children }) => (
-    <div {...commonProps} style={{ ...commonProps.style, border: '1px solid var(--border-color)', borderRadius: '4px' }}>
-      {(node.props.items ?? 'Section 1,Section 2').split(',').map((item, i) => (
-        <div key={i} style={{
-          padding: '10px 14px', borderBottom: '1px solid var(--border-color)',
-          fontSize: '13px', display: 'flex', justifyContent: 'space-between',
-        }}>
-          {item.trim()} <span style={{ color: 'var(--text-secondary)' }}>▶</span>
-        </div>
-      ))}
-      {children}
-    </div>
-  ),
+  Accordion: ({ node, commonProps, children }) => {
+    const openIdx = node.props.defaultOpen !== undefined ? parseInt(node.props.defaultOpen, 10) : -1;
+    return (
+      <div {...commonProps} style={{ ...commonProps.style, border: '1px solid var(--border-color)', borderRadius: '4px' }}>
+        {(node.props.items ?? 'Section 1,Section 2').split(',').map((item, i) => (
+          <React.Fragment key={i}>
+            <div style={{
+              padding: '10px 14px', borderBottom: '1px solid var(--border-color)',
+              fontSize: '13px', display: 'flex', justifyContent: 'space-between',
+            }}>
+              {item.trim()} <span style={{ color: 'var(--text-secondary)' }}>{i === openIdx ? '▼' : '▶'}</span>
+            </div>
+            {i === openIdx && (
+              <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-secondary)', minHeight: '40px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                Content
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+        {children}
+      </div>
+    );
+  },
 
   List: ({ node, commonProps, children }) => {
     const items = (node.props.items ?? 'Item 1,Item 2,Item 3').split(',');
@@ -290,32 +306,36 @@ export const compositeRenderers: Record<string, Renderer> = {
     );
   },
 
-  Carousel: ({ node, commonProps, children }) => (
-    <div {...commonProps} style={{
-      ...commonProps.style,
-      border: '1px solid var(--border-color)', borderRadius: '8px',
-      padding: '16px 40px', position: 'relative', minHeight: '120px',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
-      {(node.props.arrows !== 'false') && ['←', '→'].map((arrow, i) => (
-        <span key={i} style={{
-          position: 'absolute', [i === 0 ? 'left' : 'right']: '8px', top: '50%', transform: 'translateY(-50%)',
-          background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
-          borderRadius: '50%', width: '28px', height: '28px',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '14px', color: 'var(--text-secondary)',
-        }}>{arrow}</span>
-      ))}
-      <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
-        {children && React.Children.count(children) > 0 ? children : 'Slide 1'}
-      </div>
-      {node.props.dots !== 'false' && (
-        <div style={{ position: 'absolute', bottom: '6px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '4px' }}>
-          {[0, 1, 2].map(i => <div key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: i === 0 ? 'var(--accent)' : 'var(--bg-tertiary)' }} />)}
+  Carousel: ({ node, commonProps, children }) => {
+    const items = node.props.items ? node.props.items.split(',') : [];
+    const dotCount = items.length || 3;
+    return (
+      <div {...commonProps} style={{
+        ...commonProps.style,
+        border: '1px solid var(--border-color)', borderRadius: '8px',
+        padding: '16px 40px', position: 'relative', minHeight: '120px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {(node.props.arrows !== 'false') && ['←', '→'].map((arrow, i) => (
+          <span key={i} style={{
+            position: 'absolute', [i === 0 ? 'left' : 'right']: '8px', top: '50%', transform: 'translateY(-50%)',
+            background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+            borderRadius: '50%', width: '28px', height: '28px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '14px', color: 'var(--text-secondary)',
+          }}>{arrow}</span>
+        ))}
+        <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
+          {children && React.Children.count(children) > 0 ? children : (items[0] ?? 'Slide 1')}
         </div>
-      )}
-    </div>
-  ),
+        {node.props.dots !== 'false' && (
+          <div style={{ position: 'absolute', bottom: '6px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '4px' }}>
+            {Array.from({ length: dotCount }, (_, i) => <div key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: i === 0 ? 'var(--accent)' : 'var(--bg-tertiary)' }} />)}
+          </div>
+        )}
+      </div>
+    );
+  },
 
   Kanban: ({ node, commonProps, children }) => {
     const cols = (node.props.columns ?? 'Todo,In Progress,Done').split(',');

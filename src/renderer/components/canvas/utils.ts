@@ -83,6 +83,31 @@ export function px(value: string | undefined): string | undefined {
   return /^\d+$/.test(value) ? `${value}px` : value;
 }
 
+/** リーフ要素（子を持てないタグ） */
+export const LEAF_TAGS = new Set([
+  'Text', 'Image', 'Icon', 'Divider', 'Avatar', 'Badge', 'Tag', 'ProgressBar', 'Skeleton', 'StatCard', 'Chart',
+  'Button', 'Input', 'Textarea', 'Select', 'Checkbox', 'Radio', 'Toggle', 'Slider', 'DatePicker',
+  'FileUpload', 'SearchBar', 'Autocomplete', 'TagInput', 'OTPInput', 'ColorPicker', 'Link',
+  'Breadcrumb', 'Pagination', 'Stepper', 'Spinner',
+  'Rectangle', 'Ellipse', 'Line', 'Arrow', 'Polygon',
+]);
+
+/** variant カラースキーム（インライン系: Alert, Badge, Tag 等） */
+export const VARIANT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  success: { bg: '#ecfdf5', text: '#065f46', border: '#6ee7b7' },
+  error:   { bg: '#fef2f2', text: '#991b1b', border: '#fca5a5' },
+  warning: { bg: '#fffbeb', text: '#92400e', border: '#fcd34d' },
+  info:    { bg: '#eff6ff', text: '#1e40af', border: '#93c5fd' },
+};
+
+/** variant カラースキーム（オーバーレイ系: Toast） */
+export const TOAST_VARIANT_COLORS: Record<string, { bg: string; text: string }> = {
+  success: { bg: '#065f46', text: '#fff' },
+  error:   { bg: '#991b1b', text: '#fff' },
+  warning: { bg: '#92400e', text: '#fff' },
+  info:    { bg: '#1e40af', text: '#fff' },
+};
+
 export type Renderer = (p: RenderProps) => React.ReactElement;
 
 export interface RenderProps {

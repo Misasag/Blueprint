@@ -42,10 +42,12 @@ class ErrorBoundary extends Component<
 
 const EditorApp: React.FC = () => {
   const {
-    state, selectedNode, canUndo, canRedo,
-    selectNode, updateNodeProps, updateNodeText,
-    addNode, deleteNode, moveNode, undo, redo,
-    loadSource, markSaved,
+    state, selectedNode, parentNode, canUndo, canRedo,
+    selectNode, selectNodeAdd, updateNodeProps, updateNodeText,
+    addNode, deleteNode, deleteSelected, moveNode,
+    wrapNodes, unwrapNode, duplicateNodes, moveOut,
+    copyNodes, cutNodes, paste,
+    undo, redo, loadSource, markSaved,
   } = useEditorStore();
 
   const { handleOpen, handleSave } = useFileAPI({
@@ -71,10 +73,10 @@ const EditorApp: React.FC = () => {
           break;
         case 'menu:undo': undo(); break;
         case 'menu:redo': redo(); break;
-        case 'menu:delete': if (state.selectedNodeId) deleteNode(state.selectedNodeId); break;
+        case 'menu:delete': if (state.selectedNodeIds.length > 0) deleteSelected(); break;
       }
     });
-  }, [handleOpen, handleSave, undo, redo, deleteNode, state.source, state.selectedNodeId, markSaved]);
+  }, [handleOpen, handleSave, undo, redo, deleteSelected, state.source, state.selectedNodeIds, markSaved]);
 
   // キーボードショートカット
   useEffect(() => {
@@ -114,21 +116,54 @@ const EditorApp: React.FC = () => {
         return;
       }
 
-      // Delete / Backspace で削除（input にフォーカスがない場合のみ）
-      if (key === 'delete' || key === 'backspace') {
-        const target = e.target as HTMLElement;
-        const tag = target.tagName.toLowerCase();
-        if (tag === 'input' || tag === 'textarea' || target.isContentEditable) return;
-        // Backspace のブラウザナビゲーション抑制
+      // input/textarea にフォーカスがある場合はエディタショートカット無効
+      const target = e.target as HTMLElement;
+      const tagName = target.tagName.toLowerCase();
+      const isEditing = tagName === 'input' || tagName === 'textarea' || target.isContentEditable;
+
+      // Ctrl+D: 複製
+      if (isMod && key === 'd' && !isEditing) {
         e.preventDefault();
-        if (state.selectedNodeId) {
-          deleteNode(state.selectedNodeId);
+        if (state.selectedNodeIds.length > 0) {
+          duplicateNodes(state.selectedNodeIds);
+        }
+        return;
+      }
+      // Ctrl+C: コピー
+      if (isMod && key === 'c' && !isEditing) {
+        e.preventDefault();
+        if (state.selectedNodeIds.length > 0) {
+          copyNodes(state.selectedNodeIds);
+        }
+        return;
+      }
+      // Ctrl+X: カット
+      if (isMod && key === 'x' && !isEditing) {
+        e.preventDefault();
+        if (state.selectedNodeIds.length > 0) {
+          cutNodes(state.selectedNodeIds);
+        }
+        return;
+      }
+      // Ctrl+V: ペースト
+      if (isMod && key === 'v' && !isEditing) {
+        e.preventDefault();
+        paste();
+        return;
+      }
+
+      // Delete / Backspace で削除
+      if (key === 'delete' || key === 'backspace') {
+        if (isEditing) return;
+        e.preventDefault();
+        if (state.selectedNodeIds.length > 0) {
+          deleteSelected();
         }
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [handleOpen, handleSave, undo, redo, deleteNode, state.selectedNodeId]);
+  }, [handleOpen, handleSave, undo, redo, deleteSelected, duplicateNodes, copyNodes, cutNodes, paste, state.selectedNodeIds, state.source, markSaved]);
 
   return (
     <>
@@ -150,14 +185,25 @@ const EditorApp: React.FC = () => {
         <Canvas
           nodes={state.nodes}
           selectedNodeId={state.selectedNodeId}
+          selectedNodeIds={state.selectedNodeIds}
           onSelectNode={selectNode}
+          onSelectNodeAdd={selectNodeAdd}
           onAddNode={addNode}
           onMoveNode={moveNode}
           onUpdateProp={updateNodeProps}
           onDeleteNode={deleteNode}
+          onDeleteSelected={deleteSelected}
+          onWrapNodes={wrapNodes}
+          onUnwrapNode={unwrapNode}
+          onDuplicateNodes={duplicateNodes}
+          onMoveOut={moveOut}
+          onCopyNodes={copyNodes}
+          onCutNodes={cutNodes}
+          onPaste={paste}
         />
         <PropertyPanel
           selectedNode={selectedNode}
+          parentNode={parentNode}
           onUpdateProp={updateNodeProps}
           onUpdateText={updateNodeText}
           onDeleteNode={deleteNode}

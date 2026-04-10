@@ -7,26 +7,37 @@ interface PropInputProps {
   isColor?: boolean;
 }
 
-/** 数値スライダーの範囲定義 */
-const SLIDER_CONFIG: Record<string, { min: number; max: number; step: number }> = {
-  padding: { min: 0, max: 64, step: 1 },
-  margin: { min: 0, max: 64, step: 1 },
-  gap: { min: 0, max: 64, step: 1 },
-  radius: { min: 0, max: 32, step: 1 },
-  opacity: { min: 0, max: 1, step: 0.05 },
-  size: { min: 8, max: 72, step: 1 },
-  lineHeight: { min: 1, max: 3, step: 0.1 },
-  thickness: { min: 1, max: 8, step: 1 },
-  rows: { min: 1, max: 20, step: 1 },
-  cols: { min: 1, max: 12, step: 1 },
-  min: { min: 0, max: 1000, step: 1 },
-  max: { min: 0, max: 1000, step: 1 },
-  value: { min: 0, max: 100, step: 1 },
-  step: { min: 1, max: 50, step: 1 },
-  length: { min: 3, max: 8, step: 1 },
-  zIndex: { min: 0, max: 100, step: 1 },
-  grow: { min: 0, max: 5, step: 1 },
+/** スピナーの設定（step + 任意の min/max） */
+const SPINNER_CONFIG: Record<string, { step: number; min?: number; max?: number }> = {
+  padding: { step: 1, min: 0 }, margin: { step: 1 }, gap: { step: 1, min: 0 }, radius: { step: 1, min: 0 },
+  size: { step: 1, min: 1 }, thickness: { step: 1, min: 1 }, rows: { step: 1, min: 1 }, cols: { step: 1, min: 1 },
+  min: { step: 1 }, max: { step: 1 }, value: { step: 1 }, step: { step: 1, min: 1 }, length: { step: 1, min: 1 },
+  zIndex: { step: 1, min: 0 }, grow: { step: 1, min: 0 }, sides: { step: 1, min: 3 },
+  width: { step: 1, min: 0 }, height: { step: 1, min: 0 },
+  minWidth: { step: 1, min: 0 }, maxWidth: { step: 1, min: 0 },
+  minHeight: { step: 1, min: 0 }, maxHeight: { step: 1, min: 0 },
+  strokeWidth: { step: 1, min: 1 },
+  opacity: { step: 0.05, min: 0, max: 1 }, lineHeight: { step: 0.1, min: 0.5 },
 };
+
+/** 長さ系プロパティ（単位表示が必要） */
+const LENGTH_PROPS = new Set([
+  'width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight',
+  'padding', 'margin', 'gap', 'radius', 'size', 'length',
+]);
+
+/** 単位の選択肢 */
+const UNITS = ['px', '%', 'em', 'rem'] as const;
+
+/** 値から数値と単位を分離する */
+function parseValueUnit(val: string): { num: string; unit: string } {
+  if (!val) return { num: '', unit: 'px' };
+  const match = val.match(/^(-?\d*\.?\d+)\s*(px|%|em|rem)?$/);
+  if (match) {
+    return { num: match[1], unit: match[2] || 'px' };
+  }
+  return { num: val, unit: '' };
+}
 
 /** 値が純粋な数値かどうかを判定 */
 function isNumericValue(val: string): boolean {
@@ -34,7 +45,7 @@ function isNumericValue(val: string): boolean {
   return !isNaN(Number(val));
 }
 
-/** デバウンス付きプロパティ入力 — ローカルstateで即座に反映、commitはblur/Enter時 */
+/** デバウンス付きプロパティ入力 */
 export const PropInput: React.FC<PropInputProps> = ({ label, value, onChange, isColor }) => {
   const [localValue, setLocalValue] = useState(value);
   const [focused, setFocused] = useState(false);
@@ -51,8 +62,43 @@ export const PropInput: React.FC<PropInputProps> = ({ label, value, onChange, is
     }
   }, [localValue, value, onChange]);
 
-  const sliderConfig = SLIDER_CONFIG[label];
-  const showSlider = sliderConfig && (isNumericValue(localValue) || localValue === '');
+  const spinnerConfig = SPINNER_CONFIG[label];
+  const isLength = LENGTH_PROPS.has(label);
+  const showSpinner = spinnerConfig !== undefined && (isNumericValue(localValue) || localValue === '' || (isLength && parseValueUnit(localValue).num !== localValue));
+
+  const handleIncrement = useCallback((delta: number) => {
+    if (!spinnerConfig) return;
+    const { step, min, max } = spinnerConfig;
+    if (isLength) {
+      const { num, unit } = parseValueUnit(localValue || '0');
+      let next = Math.round((Number(num) + delta * step) * 100) / 100;
+      if (min !== undefined) next = Math.max(min, next);
+      if (max !== undefined) next = Math.min(max, next);
+      // 元の値が単位なし数値なら単位なしで保存（.uiフォーマットの慣例維持）
+      const hasExplicitUnit = /[a-z%]+$/i.test(localValue);
+      const newVal = hasExplicitUnit ? `${next}${unit}` : String(next);
+      setLocalValue(newVal);
+      onChange(newVal);
+    } else {
+      const current = Number(localValue) || 0;
+      let next = Math.round((current + delta * step) * 100) / 100;
+      if (min !== undefined) next = Math.max(min, next);
+      if (max !== undefined) next = Math.min(max, next);
+      const newVal = String(next);
+      setLocalValue(newVal);
+      onChange(newVal);
+    }
+  }, [localValue, spinnerConfig, isLength, onChange]);
+
+  const handleUnitCycle = useCallback(() => {
+    if (!isLength) return;
+    const { num, unit } = parseValueUnit(localValue);
+    const idx = UNITS.indexOf(unit as typeof UNITS[number]);
+    const nextUnit = UNITS[(idx + 1) % UNITS.length];
+    const newVal = num ? `${num}${nextUnit}` : '';
+    setLocalValue(newVal);
+    if (newVal) onChange(newVal);
+  }, [localValue, isLength, onChange]);
 
   return (
     <div style={{
@@ -72,7 +118,7 @@ export const PropInput: React.FC<PropInputProps> = ({ label, value, onChange, is
       }}>
         {label}
       </label>
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px' }}>
         {isColor && (
           <input
             type="color"
@@ -89,30 +135,30 @@ export const PropInput: React.FC<PropInputProps> = ({ label, value, onChange, is
             }}
           />
         )}
-        {showSlider && (
-          <input
-            type="range"
-            min={sliderConfig.min}
-            max={sliderConfig.max}
-            step={sliderConfig.step}
-            value={Number(localValue) || sliderConfig.min}
-            onChange={e => {
-              const v = sliderConfig.step < 1 ? e.target.value : String(Math.round(Number(e.target.value)));
-              setLocalValue(v);
-              onChange(v);
-            }}
-            style={{
-              width: '60px',
-              flexShrink: 0,
-              accentColor: 'var(--accent)',
-            }}
-          />
-        )}
         <input
           type="text"
-          value={localValue}
-          onChange={e => setLocalValue(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') commitValue(); }}
+          value={isLength ? parseValueUnit(localValue).num : localValue}
+          onChange={e => {
+            if (isLength) {
+              const hasExplicitUnit = /[a-z%]+$/i.test(localValue);
+              const raw = e.target.value;
+              if (hasExplicitUnit) {
+                const { unit } = parseValueUnit(localValue);
+                setLocalValue(raw ? `${raw}${unit}` : '');
+              } else {
+                setLocalValue(raw);
+              }
+            } else {
+              setLocalValue(e.target.value);
+            }
+          }}
+          onKeyDown={e => {
+            if (e.key === 'Enter') commitValue();
+            if (showSpinner) {
+              if (e.key === 'ArrowUp') { e.preventDefault(); handleIncrement(1); }
+              if (e.key === 'ArrowDown') { e.preventDefault(); handleIncrement(-1); }
+            }
+          }}
           placeholder="—"
           style={{
             flex: 1,
@@ -130,7 +176,51 @@ export const PropInput: React.FC<PropInputProps> = ({ label, value, onChange, is
             commitValue();
           }}
         />
+        {showSpinner && (
+          <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+            <button
+              onClick={() => handleIncrement(1)}
+              style={spinnerBtnStyle}
+              tabIndex={-1}
+            >▲</button>
+            <button
+              onClick={() => handleIncrement(-1)}
+              style={spinnerBtnStyle}
+              tabIndex={-1}
+            >▼</button>
+          </div>
+        )}
+        {isLength && showSpinner && (
+          <button
+            onClick={handleUnitCycle}
+            style={unitBtnStyle}
+            tabIndex={-1}
+            title="単位を切り替え"
+          >
+            {parseValueUnit(localValue).unit || 'px'}
+          </button>
+        )}
       </div>
     </div>
   );
+};
+
+const spinnerBtnStyle: React.CSSProperties = {
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  width: '14px', height: '10px',
+  border: 'none', background: 'transparent',
+  fontSize: '6px', cursor: 'pointer', padding: 0,
+  color: 'var(--text-secondary)', lineHeight: 1,
+};
+
+const unitBtnStyle: React.CSSProperties = {
+  padding: '1px 4px',
+  border: '1px solid var(--border-color)',
+  borderRadius: '2px',
+  fontSize: '9px',
+  background: 'var(--bg-secondary)',
+  color: 'var(--text-secondary)',
+  cursor: 'pointer',
+  flexShrink: 0,
+  fontFamily: 'inherit',
 };

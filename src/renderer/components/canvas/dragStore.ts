@@ -1,14 +1,12 @@
 import { useSyncExternalStore } from 'react';
 
-/**
- * Drag/Selection 状態の小規模ストア。
- * useSyncExternalStore で個別ノードが selector で購読できるため、
- * 状態変更時に該当ノードだけが再レンダーされる。
- */
+export type DropPosition = 'before' | 'inside' | 'after';
+
 class CanvasUIStore {
   selectedNodeId: string | null = null;
   draggingNodeId: string | null = null;
   dropTargetId: string | null = null;
+  dropPosition: DropPosition | null = null;
   private listeners = new Set<() => void>();
 
   subscribe = (listener: () => void) => {
@@ -32,16 +30,18 @@ class CanvasUIStore {
     this.emit();
   }
 
-  setDropTarget(id: string | null) {
-    if (this.dropTargetId === id) return;
+  setDropTarget(id: string | null, position?: DropPosition | null) {
+    const pos = position ?? null;
+    if (this.dropTargetId === id && this.dropPosition === pos) return;
     this.dropTargetId = id;
+    this.dropPosition = pos;
     this.emit();
   }
 }
 
 export const canvasUIStore = new CanvasUIStore();
 
-/** 指定ノードIDの選択/ドラッグ状態を購読 */
+/** 指定ノードIDの選択/ドラッグ/ドロップ状態を購読 */
 export function useNodeUIState(nodeId: string) {
   const isSelected = useSyncExternalStore(
     canvasUIStore.subscribe,
@@ -55,5 +55,9 @@ export function useNodeUIState(nodeId: string) {
     canvasUIStore.subscribe,
     () => canvasUIStore.dropTargetId === nodeId,
   );
-  return { isSelected, isDragging, isDropTarget };
+  const dropPosition = useSyncExternalStore(
+    canvasUIStore.subscribe,
+    () => canvasUIStore.dropTargetId === nodeId ? canvasUIStore.dropPosition : null,
+  );
+  return { isSelected, isDragging, isDropTarget, dropPosition };
 }
