@@ -106,9 +106,10 @@ export const PropInput: React.FC<PropInputProps> = ({ label, value, onChange, is
       alignItems: 'center',
       marginBottom: '2px',
       gap: '4px',
+      overflow: 'hidden',
     }}>
       <label style={{
-        width: '70px',
+        width: '60px',
         fontSize: '11px',
         color: 'var(--text-secondary)',
         flexShrink: 0,
@@ -118,7 +119,7 @@ export const PropInput: React.FC<PropInputProps> = ({ label, value, onChange, is
       }}>
         {label}
       </label>
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px' }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', minWidth: 0 }}>
         {isColor && (
           <input
             type="color"
@@ -135,71 +136,71 @@ export const PropInput: React.FC<PropInputProps> = ({ label, value, onChange, is
             }}
           />
         )}
-        <input
-          type="text"
-          value={isLength ? parseValueUnit(localValue).num : localValue}
-          onChange={e => {
-            if (isLength) {
-              const hasExplicitUnit = /[a-z%]+$/i.test(localValue);
-              const raw = e.target.value;
-              if (hasExplicitUnit) {
-                const { unit } = parseValueUnit(localValue);
-                setLocalValue(raw ? `${raw}${unit}` : '');
+        <div style={{
+          flex: 1, display: 'flex', alignItems: 'center',
+          border: focused ? '1px solid var(--accent)' : '1px solid transparent',
+          borderRadius: '3px',
+          background: 'var(--bg-secondary)',
+          minWidth: 0, overflow: 'hidden',
+        }}>
+          <input
+            type="text"
+            value={isLength ? parseValueUnit(localValue).num : localValue}
+            onChange={e => {
+              if (isLength) {
+                const hasExplicitUnit = /[a-z%]+$/i.test(localValue);
+                const raw = e.target.value;
+                if (hasExplicitUnit) {
+                  const { unit } = parseValueUnit(localValue);
+                  setLocalValue(raw ? `${raw}${unit}` : '');
+                } else {
+                  setLocalValue(raw);
+                }
               } else {
-                setLocalValue(raw);
+                setLocalValue(e.target.value);
               }
-            } else {
-              setLocalValue(e.target.value);
-            }
-          }}
-          onKeyDown={e => {
-            if (e.key === 'Enter') commitValue();
-            if (showSpinner) {
-              if (e.key === 'ArrowUp') { e.preventDefault(); handleIncrement(1); }
-              if (e.key === 'ArrowDown') { e.preventDefault(); handleIncrement(-1); }
-            }
-          }}
-          placeholder="—"
-          style={{
-            flex: 1,
-            padding: '2px 6px',
-            border: focused ? '1px solid var(--accent)' : '1px solid transparent',
-            borderRadius: '3px',
-            fontSize: '11px',
-            background: 'var(--bg-secondary)',
-            outline: 'none',
-            minWidth: 0,
-          }}
-          onFocus={() => setFocused(true)}
-          onBlur={() => {
-            setFocused(false);
-            commitValue();
-          }}
-        />
-        {showSpinner && (
-          <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') commitValue();
+              if (showSpinner) {
+                if (e.key === 'ArrowUp') { e.preventDefault(); handleIncrement(1); }
+                if (e.key === 'ArrowDown') { e.preventDefault(); handleIncrement(-1); }
+              }
+            }}
+            placeholder="0"
+            style={{
+              flex: 1,
+              padding: '2px 6px',
+              border: 'none',
+              fontSize: '11px',
+              background: 'transparent',
+              outline: 'none',
+              minWidth: 0,
+              color: localValue ? 'var(--text-primary)' : 'var(--text-secondary)',
+            }}
+            onFocus={() => setFocused(true)}
+            onBlur={() => {
+              setFocused(false);
+              commitValue();
+            }}
+          />
+          {showSpinner && (
+            <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0, marginRight: '2px' }}>
+              <button onClick={() => handleIncrement(1)} style={spinnerBtnStyle} tabIndex={-1}>▲</button>
+              <button onClick={() => handleIncrement(-1)} style={spinnerBtnStyle} tabIndex={-1}>▼</button>
+            </div>
+          )}
+          {isLength && showSpinner && (
             <button
-              onClick={() => handleIncrement(1)}
-              style={spinnerBtnStyle}
+              onClick={handleUnitCycle}
+              style={unitBtnStyle}
               tabIndex={-1}
-            >▲</button>
-            <button
-              onClick={() => handleIncrement(-1)}
-              style={spinnerBtnStyle}
-              tabIndex={-1}
-            >▼</button>
-          </div>
-        )}
-        {isLength && showSpinner && (
-          <button
-            onClick={handleUnitCycle}
-            style={unitBtnStyle}
-            tabIndex={-1}
-            title="単位を切り替え"
-          >
-            {parseValueUnit(localValue).unit || 'px'}
-          </button>
-        )}
+              title="単位を切り替え"
+            >
+              {parseValueUnit(localValue).unit || 'px'}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

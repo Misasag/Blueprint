@@ -206,7 +206,6 @@ const EditorApp: React.FC = () => {
           parentNode={parentNode}
           onUpdateProp={updateNodeProps}
           onUpdateText={updateNodeText}
-          onDeleteNode={deleteNode}
         />
       </div>
       <StatusBar selectedNode={selectedNode} parseErrors={state.parseErrors} />

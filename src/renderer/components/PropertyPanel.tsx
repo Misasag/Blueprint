@@ -21,11 +21,10 @@ interface PropertyPanelProps {
   parentNode: UINode | null;
   onUpdateProp: (nodeId: string, propName: string, value: string) => void;
   onUpdateText: (nodeId: string, text: string) => void;
-  onDeleteNode: (nodeId: string) => void;
 }
 
 export const PropertyPanel: React.FC<PropertyPanelProps> = ({
-  selectedNode, parentNode, onUpdateProp, onUpdateText, onDeleteNode,
+  selectedNode, parentNode, onUpdateProp, onUpdateText,
 }) => {
   return (
     <div style={{
@@ -51,7 +50,6 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({
             parentNode={parentNode}
             onUpdateProp={onUpdateProp}
             onUpdateText={onUpdateText}
-            onDelete={() => onDeleteNode(selectedNode.id)}
           />
         ) : (
           <div style={{ color: 'var(--text-secondary)', fontSize: '12px', padding: '16px', textAlign: 'center' }}>
@@ -77,8 +75,7 @@ const PropertiesView = React.memo<{
   parentNode: UINode | null;
   onUpdateProp: (nodeId: string, propName: string, value: string) => void;
   onUpdateText: (nodeId: string, text: string) => void;
-  onDelete: () => void;
-}>(function PropertiesView({ node, parentNode, onUpdateProp, onUpdateText, onDelete }) {
+}>(function PropertiesView({ node, parentNode, onUpdateProp, onUpdateText }) {
   const tagSpecificProps = TAG_PROPS[node.tag] ?? [];
   const styleSections = getStyleSectionsForTag(node.tag);
   const hasTextContent = node.textContent !== undefined || TEXT_TAGS.includes(node.tag as any);
@@ -102,19 +99,8 @@ const PropertiesView = React.memo<{
         fontSize: '12px', fontWeight: 600, color: 'var(--accent)',
         marginBottom: '12px', padding: '4px 8px',
         background: 'var(--accent-light)', borderRadius: '3px',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
-        <span>&lt;{node.tag}&gt;</span>
-        <button
-          onClick={onDelete}
-          title="削除 (Delete)"
-          style={{
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: 'var(--accent)', fontSize: '12px', padding: '0 4px',
-          }}
-        >
-          ✕
-        </button>
+        &lt;{node.tag}&gt;
       </div>
 
       {hasTextContent && (

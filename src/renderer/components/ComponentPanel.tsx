@@ -152,11 +152,6 @@ const ComponentItem = React.memo<{
       title={`<${tag}> — ${description}`}
     >
       <span>{tag}</span>
-      {isHovered && (
-        <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
-          {description}
-        </span>
-      )}
     </div>
   );
 });

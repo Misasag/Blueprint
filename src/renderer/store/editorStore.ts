@@ -45,6 +45,7 @@ type Action =
   | { type: 'MOVE_OUT'; nodeId: string }
   | { type: 'COPY'; nodeIds: string[] }
   | { type: 'CUT'; nodeIds: string[] }
+  | { type: 'EXPAND_SHORTCUT'; nodeId: string }
   | { type: 'PASTE' }
   | { type: 'UNDO' }
   | { type: 'REDO' }
