@@ -9,9 +9,11 @@ interface ComponentPanelProps {
   nodes: UINode[];
   selectedNodeId: string | null;
   onSelectNode: (nodeId: string | null) => void;
+  onMoveNode: (nodeId: string, targetParentId: string | null, targetIndex: number) => void;
+  onAddNode: (tag: string, parentId: string | null, index?: number) => void;
 }
 
-export const ComponentPanel: React.FC<ComponentPanelProps> = ({ nodes, selectedNodeId, onSelectNode }) => {
+export const ComponentPanel: React.FC<ComponentPanelProps> = ({ nodes, selectedNodeId, onSelectNode, onMoveNode, onAddNode }) => {
   const [activeTab, setActiveTab] = useState<TabType>('components');
   const [search, setSearch] = useState('');
   const [hoverInfo, setHoverInfo] = useState<{ tag: TagName; rect: DOMRect } | null>(null);
@@ -93,7 +95,7 @@ export const ComponentPanel: React.FC<ComponentPanelProps> = ({ nodes, selectedN
         </>
       ) : (
         <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-          <TreeView nodes={nodes} selectedNodeId={selectedNodeId} onSelectNode={onSelectNode} />
+          <TreeView nodes={nodes} selectedNodeId={selectedNodeId} onSelectNode={onSelectNode} onMoveNode={onMoveNode} onAddNode={onAddNode} />
         </div>
       )}
 

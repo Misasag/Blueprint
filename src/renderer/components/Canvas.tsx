@@ -3,6 +3,7 @@ import { UINode } from '../../parser';
 import { canvasUIStore } from './canvas/dragStore';
 import { RenderNode } from './RenderNode';
 import { StyleEditDialog } from './StyleEditDialog';
+import { BoxModelOverlay } from './BoxModelOverlay';
 import { LEAF_TAGS } from './canvas/utils';
 import { findNodeById, findParentNode } from '../store/treeUtils';
 
@@ -127,6 +128,9 @@ export const Canvas: React.FC<CanvasProps> = ({
         position: 'relative',
       }}
     >
+      {/* ボックスモデル可視化 */}
+      <BoxModelOverlay selectedNodeId={selectedNodeIds.length === 1 ? selectedNodeId : null} />
+
       {/* ズームコントロール */}
       <div style={{
         position: 'absolute', bottom: '12px', right: '12px', zIndex: 10,

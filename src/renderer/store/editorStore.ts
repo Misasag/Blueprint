@@ -4,6 +4,7 @@ import {
   updateNodeInTree, findNodeById, findParentNode,
   removeNodeFromTree, removeNodesFromTree, isDescendant, collectIds,
   defaultPropsForTag, defaultChildrenForTag, deepCloneNode, insertNodeAt,
+  swapSibling,
 } from './treeUtils';
 import { LEAF_TAGS } from '../components/canvas/utils';
 
@@ -43,6 +44,7 @@ type Action =
   | { type: 'UNWRAP_NODE'; nodeId: string }
   | { type: 'DUPLICATE_NODES'; nodeIds: string[] }
   | { type: 'MOVE_OUT'; nodeId: string }
+  | { type: 'REORDER_SIBLING'; nodeId: string; direction: 'up' | 'down' }
   | { type: 'COPY'; nodeIds: string[] }
   | { type: 'CUT'; nodeIds: string[] }
   | { type: 'EXPAND_SHORTCUT'; nodeId: string }
@@ -279,6 +281,12 @@ function reducer(state: EditorReducerState, action: Action): EditorReducerState 
       return withNewNodes(state, newNodes, [action.nodeId]);
     }
 
+    case 'REORDER_SIBLING': {
+      const newNodes = swapSibling(cur.nodes, action.nodeId, action.direction);
+      if (!newNodes) return state;
+      return withNewNodes(state, newNodes);
+    }
+
     case 'COPY': {
       if (action.nodeIds.length === 0) return state;
       const nodesToCopy = action.nodeIds
@@ -458,6 +466,7 @@ export function useEditorStore() {
   const unwrapNode = useCallback((nodeId: string) => dispatch({ type: 'UNWRAP_NODE', nodeId }), []);
   const duplicateNodes = useCallback((nodeIds: string[]) => dispatch({ type: 'DUPLICATE_NODES', nodeIds }), []);
   const moveOut = useCallback((nodeId: string) => dispatch({ type: 'MOVE_OUT', nodeId }), []);
+  const reorderSibling = useCallback((nodeId: string, direction: 'up' | 'down') => dispatch({ type: 'REORDER_SIBLING', nodeId, direction }), []);
   const copyNodes = useCallback((nodeIds: string[]) => dispatch({ type: 'COPY', nodeIds }), []);
   const cutNodes = useCallback((nodeIds: string[]) => dispatch({ type: 'CUT', nodeIds }), []);
   const paste = useCallback(() => dispatch({ type: 'PASTE' }), []);
@@ -484,6 +493,7 @@ export function useEditorStore() {
     unwrapNode,
     duplicateNodes,
     moveOut,
+    reorderSibling,
     copyNodes,
     cutNodes,
     paste,

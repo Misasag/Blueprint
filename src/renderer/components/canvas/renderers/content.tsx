@@ -83,7 +83,7 @@ export const contentRenderers: Record<string, Renderer> = {
         borderRadius: '50%', background: 'var(--bg-tertiary)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: '14px', color: 'var(--text-secondary)',
-        position: 'relative',
+        position: commonProps.style.position || 'relative',
       }}>
         {hasSrc ? '🖼' : (node.props.name ?? 'U')[0]}
         {statusColor && (

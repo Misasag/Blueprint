@@ -136,6 +136,30 @@ export function insertNodeAt(nodes: UINode[], parentId: string | null, index: nu
   });
 }
 
+/** 兄弟間でノードの順序を入れ替える（直接swap、イミュータブル） */
+export function swapSibling(nodes: UINode[], nodeId: string, direction: 'up' | 'down'): UINode[] | null {
+  // ルートレベルの検索
+  const idx = nodes.findIndex(n => n.id === nodeId);
+  if (idx >= 0) {
+    const newIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (newIdx < 0 || newIdx >= nodes.length) return null;
+    const result = [...nodes];
+    [result[idx], result[newIdx]] = [result[newIdx], result[idx]];
+    return result;
+  }
+  // 子ノード内を再帰探索
+  for (let i = 0; i < nodes.length; i++) {
+    if (nodes[i].children.length === 0) continue;
+    const swapped = swapSibling(nodes[i].children, nodeId, direction);
+    if (swapped) {
+      const result = [...nodes];
+      result[i] = { ...nodes[i], children: swapped };
+      return result;
+    }
+  }
+  return null;
+}
+
 /** タグのデフォルトプロパティ */
 export function defaultPropsForTag(tag: string): Record<string, string> {
   const defaults: Record<string, Record<string, string>> = {

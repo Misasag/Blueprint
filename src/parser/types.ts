@@ -51,20 +51,24 @@ export type TagName = (typeof VALID_TAGS)[number];
 /** 共通プロパティ（全タグ共通で利用可能） */
 export const COMMON_PROPS = [
   'width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight',
-  'padding', 'margin',
+  'padding', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+  'margin', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft',
   'color', 'background', 'opacity',
   'radius', 'border', 'shadow',
   'overflow', 'zIndex',
+  'position', 'top', 'right', 'bottom', 'left',
   'grow', 'alignSelf',
 ] as const;
 
 /** プロパティパネルのセクション定義 */
 export const STYLE_SECTIONS = {
   SIZE:       ['width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight'],
-  SPACING:    ['padding', 'margin'],
+  SPACING:    ['padding', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+               'margin', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft'],
   APPEARANCE: ['color', 'background', 'opacity'],
   BORDER:     ['radius', 'border', 'shadow'],
   LAYOUT:     ['overflow', 'zIndex'],
+  POSITION:   ['position', 'top', 'right', 'bottom', 'left'],
   SELF:       ['grow', 'alignSelf'],
 } as const;
 
@@ -145,7 +149,7 @@ export const TAG_PROPS: Record<string, string[]> = {
   TabItem: [], TabLabel: [], TabPanel: [],
   TreeNode: ['label'],
   // フィードバック系
-  Toast: ['message', 'variant', 'position', 'closable'],
+  Toast: ['message', 'variant', 'placement', 'closable'],
   Alert: ['message', 'variant', 'closable', 'icon', 'title'],
   Tooltip: ['content'],
   Popover: ['content'],
@@ -263,55 +267,55 @@ type SectionName = keyof typeof STYLE_SECTIONS;
 
 /** タグカテゴリごとに表示するセクション */
 const CATEGORY_SECTIONS: Record<string, readonly SectionName[]> = {
-  LAYOUT:     ['SIZE', 'SPACING', 'APPEARANCE', 'BORDER', 'LAYOUT', 'SELF'],
-  SHAPE:      ['SIZE', 'APPEARANCE', 'BORDER'],
-  CONTENT:    ['SIZE', 'APPEARANCE'],
-  INPUT:      ['SIZE', 'SPACING', 'APPEARANCE', 'BORDER'],
-  NAVIGATION: ['SIZE', 'SPACING', 'APPEARANCE', 'BORDER'],
-  COMPOSITE:  ['SIZE', 'SPACING', 'APPEARANCE', 'BORDER'],
+  LAYOUT:     ['SIZE', 'SPACING', 'APPEARANCE', 'BORDER', 'LAYOUT', 'POSITION', 'SELF'],
+  SHAPE:      ['SIZE', 'APPEARANCE', 'BORDER', 'POSITION'],
+  CONTENT:    ['SIZE', 'APPEARANCE', 'BORDER', 'POSITION'],
+  INPUT:      ['SIZE', 'SPACING', 'APPEARANCE', 'BORDER', 'POSITION'],
+  NAVIGATION: ['SIZE', 'SPACING', 'APPEARANCE', 'BORDER', 'POSITION'],
+  COMPOSITE:  ['SIZE', 'SPACING', 'APPEARANCE', 'BORDER', 'POSITION'],
   FEEDBACK:   ['APPEARANCE', 'BORDER'],
 };
 
-/** カテゴリデフォルトと異なるタグの個別オーバーライド */
-const TAG_SECTION_OVERRIDES: Partial<Record<string, readonly SectionName[]>> = {
-  // Content — テキスト系は SIZE 不要、画像は BORDER 必要
-  Text:        ['APPEARANCE'],
-  Icon:        ['APPEARANCE'],
-  Divider:     ['APPEARANCE'],
-  Avatar:      ['APPEARANCE', 'BORDER'],
-  Image:       ['SIZE', 'APPEARANCE', 'BORDER'],
-  ProgressBar: ['SIZE', 'APPEARANCE'],
-  Chart:       ['SIZE', 'APPEARANCE', 'BORDER'],
+/** カテゴリデフォルトから除外するセクション（差分除外方式） */
+const TAG_SECTION_EXCLUDES: Partial<Record<string, readonly SectionName[]>> = {
+  // Content — テキスト系は SIZE/BORDER 不要
+  Text:        ['SIZE', 'BORDER', 'POSITION'],
+  Icon:        ['SIZE', 'BORDER', 'POSITION'],
+  Divider:     ['SIZE', 'BORDER', 'POSITION'],
+  Badge:       ['SIZE', 'BORDER', 'POSITION'],
+  Tag:         ['SIZE', 'BORDER', 'POSITION'],
+  Skeleton:    ['BORDER', 'POSITION'],
+  StatCard:    ['BORDER', 'POSITION'],
+  Avatar:      ['SIZE', 'POSITION'],
+  ProgressBar: ['POSITION'],
   // Input — インライン系は SIZE/SPACING 不要
-  Button:      ['SIZE', 'SPACING', 'APPEARANCE', 'BORDER'],
-  Checkbox:    ['APPEARANCE'],
-  Radio:       ['APPEARANCE'],
-  Toggle:      ['APPEARANCE'],
-  Slider:      ['SIZE', 'APPEARANCE'],
-  Link:        ['APPEARANCE'],
-  // Composite — モーダルは LAYOUT 含む
-  Modal:       ['SIZE', 'SPACING', 'APPEARANCE', 'BORDER'],
-  Card:        ['SIZE', 'SPACING', 'APPEARANCE', 'BORDER'],
+  Checkbox:    ['SIZE', 'SPACING', 'BORDER', 'POSITION'],
+  Radio:       ['SIZE', 'SPACING', 'BORDER', 'POSITION'],
+  Toggle:      ['SIZE', 'SPACING', 'BORDER', 'POSITION'],
+  Slider:      ['SPACING', 'BORDER'],
+  Link:        ['SIZE', 'SPACING', 'BORDER', 'POSITION'],
   // Feedback
-  Spinner:     ['APPEARANCE'],
+  Spinner:     ['BORDER'],
 };
 
 /** タグに表示すべきスタイルセクション一覧を返す */
 export function getStyleSectionsForTag(tag: string): { name: SectionName; props: readonly string[] }[] {
-  let sectionNames: readonly SectionName[] | undefined;
-
-  if (tag in TAG_SECTION_OVERRIDES) {
-    sectionNames = TAG_SECTION_OVERRIDES[tag];
-  } else {
-    for (const [category, tags] of Object.entries(TAG_CATEGORIES)) {
-      if ((tags as readonly string[]).includes(tag)) {
-        sectionNames = CATEGORY_SECTIONS[category];
-        break;
-      }
+  // カテゴリからベースセクションを取得
+  let baseSections: readonly SectionName[] | undefined;
+  for (const [category, tags] of Object.entries(TAG_CATEGORIES)) {
+    if ((tags as readonly string[]).includes(tag)) {
+      baseSections = CATEGORY_SECTIONS[category];
+      break;
     }
   }
+  const sections = baseSections ?? (['SIZE', 'SPACING', 'APPEARANCE', 'BORDER', 'LAYOUT'] as SectionName[]);
 
-  const names = sectionNames ?? (['SIZE', 'SPACING', 'APPEARANCE', 'BORDER', 'LAYOUT'] as SectionName[]);
+  // タグ固有の除外を適用
+  const excludes = TAG_SECTION_EXCLUDES[tag];
+  const names = excludes
+    ? sections.filter(s => !(excludes as readonly string[]).includes(s))
+    : sections;
+
   return names.map(name => ({ name, props: STYLE_SECTIONS[name] }));
 }
 

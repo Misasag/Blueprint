@@ -266,18 +266,62 @@ const PropertiesView = React.memo<{
         </PropSection>
       )}
 
-      {nonSelfSections.map(({ name, props }) => (
-        <PropSection key={name} title={name}>
-          {(props as unknown as string[]).map(prop => (
-            <PropInput
-              key={prop} label={prop}
-              value={node.props[prop] ?? ''}
-              onChange={v => onUpdateProp(node.id, prop, v)}
-              isColor={prop === 'color' || prop === 'background'}
-            />
-          ))}
-        </PropSection>
-      ))}
+      {nonSelfSections.map(({ name, props }) => {
+        if (name === 'SPACING') {
+          return (
+            <PropSection key={name} title={name}>
+              <SpacingGroup label="padding" prefix="padding" node={node} onUpdateProp={onUpdateProp} />
+              <SpacingGroup label="margin" prefix="margin" node={node} onUpdateProp={onUpdateProp} />
+            </PropSection>
+          );
+        }
+        if (name === 'POSITION') {
+          const pos = node.props.position ?? '';
+          const showOffsets = pos !== '';
+          return (
+            <PropSection key={name} title={name}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2px', gap: '4px' }}>
+                <label style={{ width: '60px', fontSize: '11px', color: 'var(--text-secondary)', flexShrink: 0 }}>position</label>
+                <select
+                  value={pos}
+                  onChange={e => onUpdateProp(node.id, 'position', e.target.value)}
+                  style={{
+                    flex: 1, padding: '2px 4px', fontSize: '11px',
+                    border: '1px solid transparent', borderRadius: '3px',
+                    background: 'var(--bg-secondary)', color: 'var(--text-primary)',
+                    outline: 'none', fontFamily: 'inherit',
+                  }}
+                >
+                  <option value="">-</option>
+                  <option value="relative">relative</option>
+                  <option value="absolute">absolute</option>
+                  <option value="fixed">fixed</option>
+                  <option value="sticky">sticky</option>
+                </select>
+              </div>
+              {showOffsets && ['top', 'right', 'bottom', 'left'].map(prop => (
+                <PropInput
+                  key={prop} label={prop}
+                  value={node.props[prop] ?? ''}
+                  onChange={v => onUpdateProp(node.id, prop, v)}
+                />
+              ))}
+            </PropSection>
+          );
+        }
+        return (
+          <PropSection key={name} title={name}>
+            {(props as unknown as string[]).map(prop => (
+              <PropInput
+                key={prop} label={prop}
+                value={node.props[prop] ?? ''}
+                onChange={v => onUpdateProp(node.id, prop, v)}
+                isColor={prop === 'color' || prop === 'background'}
+              />
+            ))}
+          </PropSection>
+        );
+      })}
 
       {otherProps.length > 0 && (
         <PropSection title="OTHER">
@@ -308,3 +352,42 @@ const PropertiesView = React.memo<{
     </div>
   );
 });
+
+/** padding/margin の4方向入力グループ */
+const SpacingGroup: React.FC<{
+  label: string;
+  prefix: string;
+  node: UINode;
+  onUpdateProp: (nodeId: string, propName: string, value: string) => void;
+}> = ({ label, prefix, node, onUpdateProp }) => {
+  const dirs = [
+    { key: 'Top', icon: '↑', jp: '上' },
+    { key: 'Right', icon: '→', jp: '右' },
+    { key: 'Bottom', icon: '↓', jp: '下' },
+    { key: 'Left', icon: '←', jp: '左' },
+  ] as const;
+  return (
+    <div style={{ marginBottom: '6px' }}>
+      <PropInput
+        label={label}
+        value={node.props[prefix] ?? ''}
+        onChange={v => onUpdateProp(node.id, prefix, v)}
+      />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', paddingLeft: '16px' }}>
+        {dirs.map(dir => {
+          const prop = `${prefix}${dir.key}`;
+          return (
+            <PropInput
+              key={prop}
+              label={prop}
+              displayLabel={`${dir.icon} ${dir.jp}`}
+              title={`${prefix} ${dir.jp} (${prop})`}
+              value={node.props[prop] ?? ''}
+              onChange={v => onUpdateProp(node.id, prop, v)}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+};

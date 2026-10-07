@@ -1,13 +1,16 @@
 import React from 'react';
 import { Renderer, px, safeInt } from '../utils';
 
+/** ReactElement の props を任意型として取得 (React 19 は props: unknown) */
+const elProps = (el: React.ReactElement): Record<string, any> => el.props as Record<string, any>;
+
 /** 子ノードからスロットタグをまとめて抽出するヘルパー */
 function extractSlots(children: React.ReactNode, slotTags: string[]): { slots: Record<string, React.ReactNode>; rest: React.ReactNode[] } {
   const slots: Record<string, React.ReactNode> = {};
   const rest: React.ReactNode[] = [];
   React.Children.forEach(children, child => {
     if (React.isValidElement(child)) {
-      const tag = child.props['data-tag'];
+      const tag = elProps(child)['data-tag'];
       if (tag && slotTags.includes(tag)) {
         slots[tag] = child;
         return;
@@ -86,7 +89,7 @@ export const compositeRenderers: Record<string, Renderer> = {
       }}>
         {React.Children.map(children, (child, i) => {
           if (!React.isValidElement(child)) return child;
-          const tag = child.props['data-tag'];
+          const tag = elProps(child)['data-tag'];
           if (tag === 'TableHeader' && (node.props.headerBackground || node.props.headerColor)) {
             return React.cloneElement(child as React.ReactElement<any>, {
               style: {
@@ -139,7 +142,7 @@ export const compositeRenderers: Record<string, Renderer> = {
     return (
       <div {...commonProps} style={{ ...commonProps.style, border: '1px solid var(--border-color)', borderRadius: '4px' }}>
         {React.Children.map(children, (child, i) => {
-          if (!React.isValidElement(child) || child.props['data-tag'] !== 'AccordionItem') return child;
+          if (!React.isValidElement(child) || elProps(child)['data-tag'] !== 'AccordionItem') return child;
           return React.cloneElement(child as React.ReactElement<any>, { 'data-open': i === openIdx ? 'true' : undefined });
         })}
       </div>
@@ -151,7 +154,7 @@ export const compositeRenderers: Record<string, Renderer> = {
       <div {...commonProps} style={{ ...commonProps.style, borderBottom: '1px solid var(--border-color)' }}>
         {React.Children.map(children, child => {
           if (!React.isValidElement(child)) return child;
-          const tag = child.props['data-tag'];
+          const tag = elProps(child)['data-tag'];
           if (tag === 'AccordionBody' && !isOpen) return null;
           return child;
         })}
@@ -183,16 +186,16 @@ export const compositeRenderers: Record<string, Renderer> = {
 
     React.Children.forEach(children, (child, i) => {
       if (!React.isValidElement(child)) return;
-      const tag = child.props['data-tag'];
+      const tag = elProps(child)['data-tag'];
       if (tag === 'TabItem') {
         // TabItem の中から TabLabel と TabPanel を探す
-        const itemChildren = child.props.children;
+        const itemChildren = elProps(child).children as React.ReactNode;
         let label: React.ReactNode = `Tab ${i + 1}`;
         let panel: React.ReactNode = null;
         React.Children.forEach(itemChildren, (ic: React.ReactNode) => {
           if (React.isValidElement(ic)) {
-            if (ic.props['data-tag'] === 'TabLabel') label = ic;
-            if (ic.props['data-tag'] === 'TabPanel') panel = ic;
+            if (elProps(ic)['data-tag'] === 'TabLabel') label = ic;
+            if (elProps(ic)['data-tag'] === 'TabPanel') panel = ic;
           }
         });
         tabItems.push(label);
@@ -275,7 +278,7 @@ export const compositeRenderers: Record<string, Renderer> = {
     return (
       <div {...commonProps} style={{
         ...commonProps.style, border: '1px solid var(--border-color)', borderRadius: '8px',
-        padding: '16px 40px', position: 'relative', minHeight: '120px',
+        padding: '16px 40px', position: commonProps.style.position || 'relative', minHeight: '120px',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         {(node.props.arrows !== 'false') && ['←', '→'].map((arrow, i) => (

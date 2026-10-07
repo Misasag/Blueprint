@@ -10,7 +10,7 @@ export function safeInt(value: string | undefined, fallback: number): number {
 /** CSS値を正規化。��値のみなら px を付与 */
 export function normalizeCSSLength(value: string): string | undefined {
   if (!value) return undefined;
-  if (/^\d+(\.\d+)?$/.test(value)) return `${value}px`;
+  if (/^-?\d+(\.\d+)?$/.test(value)) return `${value}px`;
   if (value === 'auto' || value === 'inherit') return value;
   return value;
 }
@@ -22,6 +22,8 @@ export function toTextAlign(value: string | undefined): TextAlign | undefined {
   if (!value) return undefined;
   return VALID_TEXT_ALIGNS.includes(value as TextAlign) ? (value as TextAlign) : undefined;
 }
+
+const VALID_CSS_POSITIONS = new Set(['relative', 'absolute', 'fixed', 'sticky']);
 
 /** ノードの共通プロパティからCSSスタイルを構築 */
 export function buildStyle(node: UINode): React.CSSProperties {
@@ -41,7 +43,15 @@ export function buildStyle(node: UINode): React.CSSProperties {
   if (p.minHeight) { const v = normalizeCSSLength(p.minHeight); if (v) s.minHeight = v; }
   if (p.maxHeight) { const v = normalizeCSSLength(p.maxHeight); if (v) s.maxHeight = v; }
   if (p.padding) s.padding = /^\d+$/.test(p.padding) ? `${p.padding}px` : p.padding;
-  if (p.margin) s.margin = /^\d+$/.test(p.margin) ? `${p.margin}px` : p.margin;
+  if (p.paddingTop) { const v = normalizeCSSLength(p.paddingTop); if (v) s.paddingTop = v; }
+  if (p.paddingRight) { const v = normalizeCSSLength(p.paddingRight); if (v) s.paddingRight = v; }
+  if (p.paddingBottom) { const v = normalizeCSSLength(p.paddingBottom); if (v) s.paddingBottom = v; }
+  if (p.paddingLeft) { const v = normalizeCSSLength(p.paddingLeft); if (v) s.paddingLeft = v; }
+  if (p.margin) s.margin = /^-?\d+$/.test(p.margin) ? `${p.margin}px` : p.margin;
+  if (p.marginTop) { const v = normalizeCSSLength(p.marginTop); if (v) s.marginTop = v; }
+  if (p.marginRight) { const v = normalizeCSSLength(p.marginRight); if (v) s.marginRight = v; }
+  if (p.marginBottom) { const v = normalizeCSSLength(p.marginBottom); if (v) s.marginBottom = v; }
+  if (p.marginLeft) { const v = normalizeCSSLength(p.marginLeft); if (v) s.marginLeft = v; }
   if (p.color) s.color = p.color;
   if (p.background) s.background = p.background;
   if (p.opacity) {
@@ -55,12 +65,22 @@ export function buildStyle(node: UINode): React.CSSProperties {
   if (p.zIndex) { const z = parseInt(p.zIndex, 10); if (!isNaN(z)) s.zIndex = z; }
   if (p.grow) { const g = parseFloat(p.grow); if (!isNaN(g)) s.flexGrow = g; }
   if (p.alignSelf) s.alignSelf = p.alignSelf;
+  if (p.position && VALID_CSS_POSITIONS.has(p.position)) {
+    s.position = p.position as React.CSSProperties['position'];
+    if (p.top) { const v = normalizeCSSLength(p.top); if (v) s.top = v; }
+    if (p.right) { const v = normalizeCSSLength(p.right); if (v) s.right = v; }
+    if (p.bottom) { const v = normalizeCSSLength(p.bottom); if (v) s.bottom = v; }
+    if (p.left) { const v = normalizeCSSLength(p.left); if (v) s.left = v; }
+  }
 
   // ホワイトリスト外のプロパティもCSSとして適用（カスタムスタイル対応）
   const handled = new Set([
     'width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight',
-    'padding', 'margin', 'color', 'background', 'opacity',
+    'padding', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+    'margin', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft',
+    'color', 'background', 'opacity',
     'radius', 'border', 'shadow', 'overflow', 'zIndex', 'grow', 'alignSelf',
+    'position', 'top', 'right', 'bottom', 'left',
   ]);
   for (const [key, val] of Object.entries(p)) {
     if (handled.has(key) || !val) continue;

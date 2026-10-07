@@ -211,7 +211,7 @@ export const inputRenderers: Record<string, Renderer> = {
   Autocomplete: ({ node, commonProps }) => {
     const optionCount = node.props.options ? node.props.options.split(',').length : 0;
     return (
-      <div {...commonProps} style={{ ...commonProps.style, width: node.props.width ?? '100%', position: 'relative' }}>
+      <div {...commonProps} style={{ ...commonProps.style, width: node.props.width ?? '100%', position: commonProps.style.position || 'relative' }}>
         <input readOnly type="search" placeholder={node.props.placeholder ?? '検索...'}
           style={{
             width: '100%', padding: '8px 12px', paddingRight: '48px',

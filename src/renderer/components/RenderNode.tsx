@@ -162,7 +162,7 @@ export const RenderNode = React.memo<RenderNodeProps>(function RenderNode({
     onDragOver: handleDragOver,
     onDragLeave: handleDragLeave,
     onDrop: handleDrop,
-    style: { ...style, ...decorationStyle, cursor: 'pointer', position: 'relative' as const },
+    style: { ...style, ...decorationStyle, cursor: 'pointer', position: style.position || 'relative' as React.CSSProperties['position'] },
     'data-tag': node.tag,
     'data-node-id': node.id,
   };

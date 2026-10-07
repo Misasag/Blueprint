@@ -5,6 +5,8 @@ interface PropInputProps {
   value: string;
   onChange: (value: string) => void;
   isColor?: boolean;
+  displayLabel?: string;
+  title?: string;
 }
 
 /** スピナーの設定（step + 任意の min/max） */
@@ -17,13 +19,21 @@ const SPINNER_CONFIG: Record<string, { step: number; min?: number; max?: number 
   minWidth: { step: 1, min: 0 }, maxWidth: { step: 1, min: 0 },
   minHeight: { step: 1, min: 0 }, maxHeight: { step: 1, min: 0 },
   strokeWidth: { step: 1, min: 1 },
+  paddingTop: { step: 1, min: 0 }, paddingRight: { step: 1, min: 0 },
+  paddingBottom: { step: 1, min: 0 }, paddingLeft: { step: 1, min: 0 },
+  marginTop: { step: 1 }, marginRight: { step: 1 },
+  marginBottom: { step: 1 }, marginLeft: { step: 1 },
+  top: { step: 1 }, right: { step: 1 }, bottom: { step: 1 }, left: { step: 1 },
   opacity: { step: 0.05, min: 0, max: 1 }, lineHeight: { step: 0.1, min: 0.5 },
 };
 
 /** 長さ系プロパティ（単位表示が必要） */
 const LENGTH_PROPS = new Set([
   'width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight',
-  'padding', 'margin', 'gap', 'radius', 'size', 'length',
+  'padding', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+  'margin', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft',
+  'gap', 'radius', 'size', 'length',
+  'top', 'right', 'bottom', 'left',
 ]);
 
 /** 単位の選択肢 */
@@ -46,7 +56,7 @@ function isNumericValue(val: string): boolean {
 }
 
 /** デバウンス付きプロパティ入力 */
-export const PropInput: React.FC<PropInputProps> = ({ label, value, onChange, isColor }) => {
+export const PropInput: React.FC<PropInputProps> = ({ label, value, onChange, isColor, displayLabel, title }) => {
   const [localValue, setLocalValue] = useState(value);
   const [focused, setFocused] = useState(false);
 
@@ -108,16 +118,20 @@ export const PropInput: React.FC<PropInputProps> = ({ label, value, onChange, is
       gap: '4px',
       overflow: 'hidden',
     }}>
-      <label style={{
-        width: '60px',
-        fontSize: '11px',
-        color: 'var(--text-secondary)',
-        flexShrink: 0,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-      }}>
-        {label}
+      <label
+        title={title ?? label}
+        style={{
+          width: '60px',
+          fontSize: '11px',
+          color: 'var(--text-secondary)',
+          flexShrink: 0,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          cursor: title ? 'help' : 'default',
+        }}
+      >
+        {displayLabel ?? label}
       </label>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', minWidth: 0 }}>
         {isColor && (
@@ -167,7 +181,7 @@ export const PropInput: React.FC<PropInputProps> = ({ label, value, onChange, is
                 if (e.key === 'ArrowDown') { e.preventDefault(); handleIncrement(-1); }
               }
             }}
-            placeholder="0"
+            placeholder={showSpinner ? "0" : ""}
             style={{
               flex: 1,
               padding: '2px 6px',

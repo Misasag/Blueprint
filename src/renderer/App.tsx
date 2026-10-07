@@ -45,7 +45,7 @@ const EditorApp: React.FC = () => {
     state, selectedNode, parentNode, canUndo, canRedo,
     selectNode, selectNodeAdd, updateNodeProps, updateNodeText,
     addNode, deleteNode, deleteSelected, moveNode,
-    wrapNodes, unwrapNode, duplicateNodes, moveOut,
+    wrapNodes, unwrapNode, duplicateNodes, moveOut, reorderSibling,
     copyNodes, cutNodes, paste,
     undo, redo, loadSource, markSaved,
   } = useEditorStore();
@@ -121,6 +121,21 @@ const EditorApp: React.FC = () => {
       const tagName = target.tagName.toLowerCase();
       const isEditing = tagName === 'input' || tagName === 'textarea' || target.isContentEditable;
 
+      // Ctrl+ArrowUp/Down: 兄弟間並べ替え
+      if (isMod && e.key === 'ArrowUp' && !isEditing) {
+        e.preventDefault();
+        if (state.selectedNodeIds.length === 1) {
+          reorderSibling(state.selectedNodeIds[0], 'up');
+        }
+        return;
+      }
+      if (isMod && e.key === 'ArrowDown' && !isEditing) {
+        e.preventDefault();
+        if (state.selectedNodeIds.length === 1) {
+          reorderSibling(state.selectedNodeIds[0], 'down');
+        }
+        return;
+      }
       // Ctrl+D: 複製
       if (isMod && key === 'd' && !isEditing) {
         e.preventDefault();
@@ -163,7 +178,7 @@ const EditorApp: React.FC = () => {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [handleOpen, handleSave, undo, redo, deleteSelected, duplicateNodes, copyNodes, cutNodes, paste, state.selectedNodeIds, state.source, markSaved]);
+  }, [handleOpen, handleSave, undo, redo, deleteSelected, duplicateNodes, reorderSibling, copyNodes, cutNodes, paste, state.selectedNodeIds, state.source, markSaved]);
 
   return (
     <>
@@ -181,6 +196,8 @@ const EditorApp: React.FC = () => {
           nodes={state.nodes}
           selectedNodeId={state.selectedNodeId}
           onSelectNode={selectNode}
+          onMoveNode={moveNode}
+          onAddNode={addNode}
         />
         <Canvas
           nodes={state.nodes}
